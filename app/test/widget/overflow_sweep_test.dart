@@ -159,7 +159,7 @@ void main() {
         size: const Size(320, 568),
       );
       await settle(tester);
-      await tester.tap(find.textContaining('Meniscus Recovery').last, warnIfMissed: false);
+      await tester.tap(find.textContaining('Oporavak meniskusa').last, warnIfMissed: false);
       await settle(tester);
       expect(tester.takeException(), isNull);
     });
@@ -171,7 +171,7 @@ void main() {
         size: const Size(320, 568),
       );
       await settle(tester);
-      await tester.tap(find.textContaining('custom protocol'), warnIfMissed: false);
+      await tester.tap(find.textContaining('vlastiti protokol'), warnIfMissed: false);
       await settle(tester);
     });
   });

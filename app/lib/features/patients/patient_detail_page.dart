@@ -8,6 +8,8 @@ import 'package:physio_app/design_system/week_strip.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/features/patients/patient_detail_bloc.dart';
+import 'package:physio_app/l10n/body_parts.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 class PatientDetailPage extends StatelessWidget {
   final String patientId;
@@ -37,40 +39,73 @@ class _PatientDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      // Compact toolbar: the header (avatar + name) is the real title, so
+      // the bar only needs to fit the back arrow.
+      appBar: AppBar(toolbarHeight: 44),
+      // Pinned so the primary action never sits below the fold. heightFactor
+      // keeps the bar shrink-wrapped — a plain Center would expand to fill
+      // the scaffold and squeeze the body to zero height.
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(
+            AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Builder(
+              builder: (context) => PrimaryButton(
+                label: AppLocalizations.of(context).assignSomething,
+                onPressed: () =>
+                    context.go('/physio/patients/$patientId/assign'),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: BlocConsumer<PatientDetailBloc, PatientDetailState>(
         listenWhen: (previous, current) =>
             previous.lastGeneratedCode != current.lastGeneratedCode &&
             current.lastGeneratedCode != null,
         listener: (context, state) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('New invite code: ${state.lastGeneratedCode}')),
+            SnackBar(
+                content: Text(AppLocalizations.of(context)
+                    .newInviteCode(state.lastGeneratedCode ?? ''))),
           );
         },
         builder: (context, state) {
           if (state.loading || state.patient == null) {
             return const Center(child: CircularProgressIndicator());
           }
+          final l = AppLocalizations.of(context);
           final patient = state.patient!;
-          return ListView(
+          return ContentColumn(
+              child: ListView(
             padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xl),
+                AppSpacing.md, 0, AppSpacing.md, AppSpacing.xl),
             children: [
-              _Header(patient: patient, daysSinceLastActive: state.daysSinceLastActive),
+              _Header(
+                  patient: patient,
+                  daysSinceLastActive: state.daysSinceLastActive),
               if (!patient.redeemed) ...[
                 const SizedBox(height: AppSpacing.md),
                 _InvitePanel(patient: patient),
               ],
-              const SectionHeader(title: 'Active protocols'),
+              SectionHeader(title: l.activeProtocols),
               if (state.protocols.isEmpty)
-                const _EmptySection(message: 'No active protocols yet.')
-              else
+                _EmptySection(message: l.noActiveProtocols)
+              else ...[
                 for (final p in state.protocols) ...[
                   _ProtocolCard(progress: p),
                   const SizedBox(height: AppSpacing.sm),
                 ],
+                const Padding(
+                  padding: EdgeInsets.only(left: AppSpacing.xs, top: 2),
+                  child: WeekStripLegend(),
+                ),
+              ],
               if (state.singles.isNotEmpty) ...[
-                const SectionHeader(title: 'Also assigned'),
+                SectionHeader(title: l.alsoAssigned),
                 for (final single in state.singles)
                   for (final item in single.items) ...[
                     _SingleRow(
@@ -80,19 +115,15 @@ class _PatientDetailView extends StatelessWidget {
                     const SizedBox(height: AppSpacing.sm),
                   ],
               ],
-              const SectionHeader(title: 'Private notes'),
+              SectionHeader(title: l.privateNotes),
               _NotesField(
                 key: ValueKey('notes-${patient.id}'),
                 initialNotes: state.notes,
-                onChanged: (text) => context.read<PatientDetailBloc>().add(NotesChanged(text)),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              PrimaryButton(
-                label: 'Assign something',
-                onPressed: () => context.go('/physio/patients/$patientId/assign'),
+                onChanged: (text) =>
+                    context.read<PatientDetailBloc>().add(NotesChanged(text)),
               ),
             ],
-          );
+          ));
         },
       ),
     );
@@ -122,10 +153,11 @@ class _Header extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 2),
               Text(
-                '${patient.primaryBodyPart ?? '—'} · ${_lastActiveLabel()}',
+                '${_bodyPartLabel(context)} · ${_lastActiveLabel(context)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, color: AppColors.textMuted),
+                style:
+                    const TextStyle(fontSize: 14, color: AppColors.textMuted),
               ),
             ],
           ),
@@ -134,13 +166,20 @@ class _Header extends StatelessWidget {
     );
   }
 
-  String _lastActiveLabel() {
-    if (!patient.redeemed) return 'invited — code not redeemed';
+  String _bodyPartLabel(BuildContext context) {
+    final part = patient.primaryBodyPart;
+    if (part == null) return '—';
+    return localizedBodyPart(AppLocalizations.of(context), part);
+  }
+
+  String _lastActiveLabel(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (!patient.redeemed) return l.invitedNotRedeemed;
     final days = daysSinceLastActive;
-    if (days == null) return 'no activity yet';
-    if (days <= 0) return 'today';
-    if (days == 1) return 'yesterday';
-    return '$days days ago';
+    if (days == null) return l.noActivityYet;
+    if (days <= 0) return l.today;
+    if (days == 1) return l.yesterday;
+    return l.daysAgo(days);
   }
 }
 
@@ -151,13 +190,17 @@ class _InvitePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final expires = patient.inviteExpiresAt;
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Invite code',
-              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textMuted)),
+          Text(l.inviteCode,
+              style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textMuted)),
           const SizedBox(height: 4),
           Text(
             patient.inviteCode ?? '—',
@@ -173,14 +216,16 @@ class _InvitePanel extends StatelessWidget {
           ),
           if (expires != null) ...[
             const SizedBox(height: 2),
-            Text('expires ${DateFormat.MMMd().format(expires)}',
-                style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+            Text(l.expiresOn(DateFormat.MMMd().format(expires)),
+                style:
+                    const TextStyle(fontSize: 13, color: AppColors.textMuted)),
           ],
           const SizedBox(height: AppSpacing.sm),
           SecondaryButton(
-            label: 'Regenerate code',
-            onPressed: () =>
-                context.read<PatientDetailBloc>().add(const RegenerateInvitePressed()),
+            label: l.regenerateCode,
+            onPressed: () => context
+                .read<PatientDetailBloc>()
+                .add(const RegenerateInvitePressed()),
           ),
         ],
       ),
@@ -205,15 +250,18 @@ class _ProtocolCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(a.name,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+                    style: AppTypography.titleMedium
+                        .copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(
-                  '${a.items.length} exercises · ${progress.doneCount} done · ${progress.skippedCount} skipped',
+                  AppLocalizations.of(context).protocolSummary(a.items.length,
+                      progress.doneCount, progress.skippedCount),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                  style:
+                      const TextStyle(fontSize: 13, color: AppColors.textMuted),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 WeekStrip(marks: progress.strip),
@@ -223,7 +271,10 @@ class _ProtocolCard extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             pct == null ? '—' : '${(pct * 100).round()}%',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.accentDeep),
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.accentDeep),
           ),
         ],
       ),
@@ -251,7 +302,8 @@ class _SingleRow extends StatelessWidget {
             child: Text(item.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           ),
           const SizedBox(width: AppSpacing.sm),
           Text(formatDuration(item.durationSec),
@@ -270,7 +322,8 @@ class _NotesField extends StatefulWidget {
   final String initialNotes;
   final ValueChanged<String> onChanged;
 
-  const _NotesField({super.key, required this.initialNotes, required this.onChanged});
+  const _NotesField(
+      {super.key, required this.initialNotes, required this.onChanged});
 
   @override
   State<_NotesField> createState() => _NotesFieldState();
@@ -292,7 +345,8 @@ class _NotesFieldState extends State<_NotesField> {
       controller: _controller,
       maxLines: 4,
       onChanged: widget.onChanged,
-      decoration: const InputDecoration(hintText: 'Clinical context only you can see…'),
+      decoration:
+          InputDecoration(hintText: AppLocalizations.of(context).notesHint),
     );
   }
 }
@@ -305,7 +359,8 @@ class _EmptySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      child: Text(message, style: const TextStyle(fontSize: 14, color: AppColors.textMuted)),
+      child: Text(message,
+          style: const TextStyle(fontSize: 14, color: AppColors.textMuted)),
     );
   }
 }

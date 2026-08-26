@@ -15,6 +15,7 @@ import 'package:physio_app/domain/repositories.dart';
 /// session (§4.6 critique amendment 3).
 class SingleAssignmentRow extends Equatable {
   final String assignmentId;
+  final String videoId;
   final String title;
   final String bodyPart;
   final int durationSec;
@@ -22,6 +23,7 @@ class SingleAssignmentRow extends Equatable {
 
   const SingleAssignmentRow({
     required this.assignmentId,
+    required this.videoId,
     required this.title,
     required this.bodyPart,
     required this.durationSec,
@@ -29,7 +31,7 @@ class SingleAssignmentRow extends Equatable {
   });
 
   @override
-  List<Object?> get props => [assignmentId, title, bodyPart, durationSec, seen];
+  List<Object?> get props => [assignmentId, videoId, title, bodyPart, durationSec, seen];
 }
 
 /// Remaining today's-session exercises for one body part (spec §5.1 — shown
@@ -180,6 +182,7 @@ class PatientHomeBloc extends Bloc<PatientHomeEvent, PatientHomeState> {
           final it = a.items.first;
           return SingleAssignmentRow(
             assignmentId: a.id,
+            videoId: it.videoId,
             title: it.title,
             bodyPart: it.bodyPart,
             durationSec: it.durationSec,

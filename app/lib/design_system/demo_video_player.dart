@@ -1,29 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:physio_app/data/demo_media_store.dart';
 import 'package:physio_app/design_system/components.dart';
+import 'package:physio_app/design_system/fullscreen_video_page.dart';
+import 'package:physio_app/design_system/real_video_player.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
+
+/// Playback state handed back by the placeholder's fullscreen stage.
+typedef _DemoPlayback = ({double progress, bool playing});
 
 /// Demo stand-in for real video playback (spec §15.1): a poster gradient with
-/// play/pause and a progress bar animated over the real duration. A future
-/// Firebase-backed player replaces this widget without touching callers.
+/// play/pause and a progress bar animated over the real duration. When the
+/// video id has locally imported media (DemoMediaStore), a real player is
+/// rendered instead — same chrome, same callbacks.
 class DemoVideoPlayer extends StatefulWidget {
   final String title;
   final String bodyPart;
   final int durationSec;
   final bool autoplay;
 
+  /// Library video id; used to look up locally imported clips.
+  final String? videoId;
+
   /// When true the player expands to fill its parent (session player, where
   /// the video is the dominant object) instead of locking to 16:9.
   final bool fill;
   final VoidCallback? onCompleted;
+
+  /// Fullscreen hosting: exit control instead of enter, progress carried in.
+  final bool isFullscreen;
+  final double initialProgress;
 
   const DemoVideoPlayer({
     super.key,
     required this.title,
     required this.bodyPart,
     required this.durationSec,
+    this.videoId,
     this.autoplay = false,
     this.fill = false,
     this.onCompleted,
+    this.isFullscreen = false,
+    this.initialProgress = 0,
   });
 
   @override
@@ -44,6 +62,7 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer>
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) widget.onCompleted?.call();
     });
+    _controller.value = widget.initialProgress.clamp(0.0, 1.0);
     if (widget.autoplay) _controller.forward();
   }
 
@@ -63,8 +82,48 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer>
     setState(() {});
   }
 
+  Future<void> _enterFullscreen() async {
+    final wasPlaying = _controller.isAnimating;
+    final progress = _controller.value;
+    _controller.stop();
+    final result = await FullscreenVideoPage.open<_DemoPlayback>(
+      context,
+      (_) => DemoVideoPlayer(
+        title: widget.title,
+        bodyPart: widget.bodyPart,
+        durationSec: widget.durationSec,
+        fill: true,
+        isFullscreen: true,
+        autoplay: wasPlaying,
+        initialProgress: progress,
+      ),
+    );
+    if (!mounted) return;
+    if (result != null) {
+      _controller.value = result.progress;
+      if (result.playing) _controller.forward();
+    } else if (wasPlaying) {
+      _controller.forward();
+    }
+    setState(() {});
+  }
+
+  void _exitFullscreen() {
+    FullscreenVideoPage.exit<_DemoPlayback>(
+        context, (progress: _controller.value, playing: _controller.isAnimating));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final mediaUrl = DemoMediaStore.instance.urlFor(widget.videoId);
+    if (mediaUrl != null) {
+      return RealVideoPlayer(
+        url: mediaUrl,
+        autoplay: widget.autoplay,
+        fill: widget.fill,
+        onCompleted: widget.onCompleted,
+      );
+    }
     final player = Container(
       decoration: const BoxDecoration(color: AppColors.videoBg),
       child: Stack(
@@ -95,12 +154,15 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer>
             ),
           ),
           Center(
-            child: IconButton(
-              onPressed: _toggle,
-              iconSize: 58,
-              icon: AnimatedBuilder(
-                animation: _controller,
-                builder: (_, __) => Icon(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (_, __) => IconButton(
+                onPressed: _toggle,
+                iconSize: 58,
+                tooltip: _controller.isAnimating
+                    ? AppLocalizations.of(context).pauseVideo
+                    : AppLocalizations.of(context).playVideo,
+                icon: Icon(
                   _controller.isAnimating
                       ? Icons.pause_circle_filled_rounded
                       : Icons.play_circle_fill_rounded,
@@ -124,22 +186,41 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer>
             ),
           ),
           Positioned(
-            right: 12,
-            bottom: 10,
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (_, __) {
-                final elapsed =
-                    (_controller.value * widget.durationSec).round();
-                return Text(
-                  '${formatDuration(elapsed)} / ${formatDuration(widget.durationSec)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.onAccent.withOpacity(0.8),
-                    fontFeatures: const [FontFeature.tabularFigures()],
+            right: 6,
+            bottom: 6,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (_, __) {
+                    final elapsed =
+                        (_controller.value * widget.durationSec).round();
+                    return Text(
+                      '${formatDuration(elapsed)} / ${formatDuration(widget.durationSec)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.onAccent.withOpacity(0.8),
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    );
+                  },
+                ),
+                IconButton(
+                  onPressed:
+                      widget.isFullscreen ? _exitFullscreen : _enterFullscreen,
+                  tooltip: widget.isFullscreen
+                      ? AppLocalizations.of(context).exitFullscreenTooltip
+                      : AppLocalizations.of(context).fullscreenTooltip,
+                  iconSize: 22,
+                  icon: Icon(
+                    widget.isFullscreen
+                        ? Icons.fullscreen_exit_rounded
+                        : Icons.fullscreen_rounded,
+                    color: AppColors.onAccent.withOpacity(0.9),
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ],

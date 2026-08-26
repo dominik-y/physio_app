@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:physio_app/core/dates.dart';
 import 'package:physio_app/data/demo_data.dart';
 import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/demo_video_player.dart';
 import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/features/session/session_bloc.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 const _sessionBg = AppColors.videoBg;
 
@@ -15,7 +17,11 @@ const _sessionBg = AppColors.videoBg;
 class SessionPage extends StatelessWidget {
   final String patientId;
 
-  const SessionPage({super.key, this.patientId = DemoData.currentPatientId});
+  /// Clock override so tests can pin "today" to the seeded fixture date.
+  final NowFn? now;
+
+  const SessionPage(
+      {super.key, this.patientId = DemoData.currentPatientId, this.now});
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +30,7 @@ class SessionPage extends StatelessWidget {
         patientId: patientId,
         assignmentsRepository: context.read<AssignmentsRepository>(),
         completionsRepository: context.read<CompletionsRepository>(),
+        now: now ?? DateTime.now,
       )..add(const SessionStarted()),
       child: const _SessionScaffold(),
     );
@@ -62,6 +69,7 @@ class _CloseButton extends StatelessWidget {
       children: [
         IconButton(
           onPressed: () => context.pop(),
+          tooltip: AppLocalizations.of(context).close,
           icon: const Icon(Icons.close_rounded, color: AppColors.onAccent),
         ),
       ],
@@ -76,6 +84,7 @@ class _InProgressBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final exercise = state.current;
     final item = exercise.item;
 
@@ -100,6 +109,7 @@ class _InProgressBody extends StatelessWidget {
                           title: item.title,
                           bodyPart: item.bodyPart,
                           durationSec: item.durationSec,
+                          videoId: item.videoId,
                           autoplay: true,
                           fill: true,
                         ),
@@ -109,7 +119,7 @@ class _InProgressBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'EXERCISE ${state.currentIndex + 1} OF ${state.total}',
+                  l.exerciseNofM(state.currentIndex + 1, state.total),
                   style: const TextStyle(
                     color: AppColors.accentSoft,
                     fontSize: 12,
@@ -135,10 +145,10 @@ class _InProgressBody extends StatelessWidget {
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    DosagePill(label: 'sets', value: '${item.sets}'),
-                    DosagePill(label: 'reps', value: '${item.reps}'),
+                    DosagePill(label: l.setsPill, value: '${item.sets}'),
+                    DosagePill(label: l.repsPill, value: '${item.reps}'),
                     if (item.holdSec > 0)
-                      DosagePill(label: 'hold', value: '${item.holdSec}s'),
+                      DosagePill(label: l.holdPill, value: '${item.holdSec}s'),
                   ],
                 ),
               ],
@@ -148,24 +158,33 @@ class _InProgressBody extends StatelessWidget {
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Column(
-            children: [
-              PrimaryButton(
-                label: 'Done · next exercise',
-                background: AppColors.onAccent,
-                foreground: AppColors.accentDeep,
-                onPressed: () =>
-                    context.read<SessionBloc>().add(const DonePressed()),
+          // Same max width as the video column — a full-bleed control bar
+          // under a centered video reads as broken on desktop.
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                children: [
+                  PrimaryButton(
+                    label: l.doneNextExercise,
+                    background: AppColors.onAccent,
+                    foreground: AppColors.accentDeep,
+                    onPressed: () =>
+                        context.read<SessionBloc>().add(const DonePressed()),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () =>
+                        context.read<SessionBloc>().add(const SkipPressed()),
+                    // warning is 3.2:1 on the dark stage; warningOnDark is 7.7:1.
+                    style: TextButton.styleFrom(
+                        foregroundColor: AppColors.warningOnDark),
+                    child: Text(l.skipThisOne,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () =>
-                    context.read<SessionBloc>().add(const SkipPressed()),
-                style: TextButton.styleFrom(foregroundColor: AppColors.warning),
-                child: const Text('Skip this one',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-              ),
-            ],
+            ),
           ),
         ),
       ],
@@ -180,6 +199,7 @@ class _CompleteBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       children: [
         const Padding(padding: EdgeInsets.only(left: 4), child: _CloseButton()),
@@ -195,23 +215,23 @@ class _CompleteBody extends StatelessWidget {
                   const Icon(Icons.check_circle_rounded,
                       color: AppColors.accentSoft, size: 64),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Session complete',
-                    style: TextStyle(
+                  Text(
+                    l.sessionComplete,
+                    style: const TextStyle(
                         color: AppColors.onAccent,
                         fontSize: 24,
                         fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${state.doneCount} done · ${state.skippedCount} skipped',
+                    l.doneSkippedSummary(state.doneCount, state.skippedCount),
                     style: TextStyle(
                         color: AppColors.onAccent.withOpacity(0.7),
                         fontSize: 15),
                   ),
                   const SizedBox(height: 24),
                   PrimaryButton(
-                    label: 'Back to home',
+                    label: l.backToHome,
                     background: AppColors.onAccent,
                     foreground: AppColors.accentDeep,
                     onPressed: () => context.go('/patient/home'),
@@ -231,6 +251,7 @@ class _EmptyBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       children: [
         const Padding(padding: EdgeInsets.only(left: 4), child: _CloseButton()),
@@ -244,17 +265,17 @@ class _EmptyBody extends StatelessWidget {
                   Icon(Icons.spa_rounded,
                       size: 44, color: AppColors.onAccent.withOpacity(0.6)),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Nothing due today',
+                  Text(
+                    l.nothingDueToday,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: AppColors.onAccent,
                         fontSize: 18,
                         fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
-                    label: 'Back to home',
+                    label: l.backToHome,
                     background: AppColors.onAccent,
                     foreground: AppColors.accentDeep,
                     onPressed: () => context.go('/patient/home'),

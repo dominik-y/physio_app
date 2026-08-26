@@ -10,6 +10,8 @@ import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/features/home/patient_home_bloc.dart';
 import 'package:physio_app/features/home/single_video_page.dart';
+import 'package:physio_app/l10n/body_parts.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 /// Patient home (spec §5.1): one screen, no tabs. Hero anchors the top,
 /// "Also assigned" singles below it, body-part sections last.
@@ -29,11 +31,11 @@ class PatientHomePage extends StatelessWidget {
   }
 }
 
-String _greeting(DateTime now) {
+String _greeting(AppLocalizations l, DateTime now) {
   final h = now.hour;
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return l.goodMorning;
+  if (h < 18) return l.goodAfternoon;
+  return l.goodEvening;
 }
 
 class _PatientHomeView extends StatelessWidget {
@@ -46,8 +48,12 @@ class _PatientHomeView extends StatelessWidget {
       body: SafeArea(
         child: BlocBuilder<PatientHomeBloc, PatientHomeState>(
           builder: (context, state) {
-            final name = state.patientName.isEmpty ? DemoData.currentPatientName : state.patientName;
-            return ListView(
+            final l = AppLocalizations.of(context);
+            final name = state.patientName.isEmpty
+                ? DemoData.currentPatientName
+                : state.patientName;
+            return ContentColumn(
+                child: ListView(
               padding: const EdgeInsets.all(AppSpacing.md),
               children: [
                 Row(
@@ -58,7 +64,7 @@ class _PatientHomeView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _greeting(DateTime.now()),
+                            _greeting(l, DateTime.now()),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodySmall,
@@ -77,12 +83,12 @@ class _PatientHomeView extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (!state.hasAnyAssignment)
-                  const Padding(
-                    padding: EdgeInsets.only(top: AppSpacing.xl),
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xl),
                     child: EmptyState(
                       icon: Icons.spa_outlined,
-                      message: 'Nothing assigned yet',
-                      detail: 'Your physio will set you up.',
+                      message: l.nothingAssignedYet,
+                      detail: l.physioWillSetYouUp,
                     ),
                   )
                 else ...[
@@ -96,19 +102,20 @@ class _PatientHomeView extends StatelessWidget {
                     onStart: () => context.push('/patient/session'),
                   ),
                   if (state.singles.isNotEmpty) ...[
-                    const SectionHeader(title: 'Also assigned'),
+                    SectionHeader(title: l.alsoAssigned),
                     ...state.singles.map((s) => _SingleRow(row: s)),
                   ],
                   for (final section in state.bodyPartSections) ...[
-                    SectionHeader(title: section.bodyPart),
+                    SectionHeader(
+                        title: localizedBodyPart(l, section.bodyPart)),
                     ...section.items.map((item) => _ExerciseRow(item: item)),
                   ],
                   if (state.heroState == HeroState.done) ...[
                     const SizedBox(height: AppSpacing.xl),
                     // Soft anchor: the finished screen ends on purpose.
-                    const Center(
+                    Center(
                       child: Text(
-                        'That’s everything for today — see you tomorrow.',
+                        l.everythingDoneToday,
                         textAlign: TextAlign.center,
                         style: AppTypography.bodySmall,
                       ),
@@ -116,7 +123,7 @@ class _PatientHomeView extends StatelessWidget {
                   ],
                 ],
               ],
-            );
+            ));
           },
         ),
       ),
@@ -134,7 +141,9 @@ class _SingleRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: AppCard(
         onTap: () {
-          context.read<PatientHomeBloc>().add(AssignmentOpened(row.assignmentId));
+          context
+              .read<PatientHomeBloc>()
+              .add(AssignmentOpened(row.assignmentId));
           Navigator.of(context).push(
             MaterialPageRoute(
               fullscreenDialog: true,
@@ -142,6 +151,7 @@ class _SingleRow extends StatelessWidget {
                 title: row.title,
                 bodyPart: row.bodyPart,
                 durationSec: row.durationSec,
+                videoId: row.videoId,
               ),
             ),
           );
@@ -187,6 +197,19 @@ class _ExerciseRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: AppCard(
+        // Browse-only preview; completions are recorded in the guided
+        // session, not here (§4.6 amendment 3).
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => SingleVideoPage(
+              title: item.title,
+              bodyPart: item.bodyPart,
+              durationSec: item.durationSec,
+              videoId: item.videoId,
+            ),
+          ),
+        ),
         child: Row(
           children: [
             VideoThumb(bodyPart: item.bodyPart),
@@ -202,7 +225,8 @@ class _ExerciseRow extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   Text(
-                    '${item.sets}× ${item.reps} reps',
+                    AppLocalizations.of(context)
+                        .setsTimesReps(item.sets, item.reps),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],

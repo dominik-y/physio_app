@@ -96,7 +96,7 @@ void main() {
     );
 
     blocTest<AssignFlowBloc, AssignFlowState>(
-      'assigning a second protocol requires two SubmitPressed taps (§4.6 guard)',
+      'assigning a second protocol submits directly (workload guard removed, owner call 2026-08-25)',
       build: () => _buildBloc(DemoStore.seed(now: () => _testNow), DemoData.twoProtocolPatientId),
       act: (bloc) async {
         await _settle();
@@ -107,12 +107,6 @@ void main() {
         bloc.add(StartedFromTemplate(rotator));
         await _settle();
         expect(bloc.state.items.length, 3);
-
-        bloc.add(const SubmitPressed());
-        await _settle();
-        expect(bloc.state.confirmArmed, isTrue);
-        expect(bloc.state.submitStatus, AssignSubmitStatus.idle);
-        expect(bloc.state.existingDailyTotal + bloc.state.items.length, 10);
 
         bloc.add(const SubmitPressed());
         await _settle();

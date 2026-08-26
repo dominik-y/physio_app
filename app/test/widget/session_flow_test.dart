@@ -12,16 +12,20 @@ void main() {
 
     await pumpScreen(
       tester,
-      const SessionPage(),
+      // Pin the bloc's clock to the harness date — the store is seeded
+      // relative to testNow, so a real-clock "today" drifts off it.
+      SessionPage(now: () => testNow),
       store: store,
       role: UserRole.patient,
     );
 
     // Ana resumes mid-session: v-quad already done this morning, 6 remain.
     // Mix in one Skip among the Dones.
+    // Labels are Croatian — the harness pumps under the production default
+    // locale (hr).
     const skipAt = 3;
     for (var i = 0; i < 6; i++) {
-      final label = i == skipAt ? 'Skip this one' : 'Done · next exercise';
+      final label = i == skipAt ? 'Preskoči ovu' : 'Gotovo · sljedeća vježba';
       final finder = find.text(label);
       expect(finder, findsOneWidget, reason: 'step $i should show the "$label" control');
       await tester.tap(finder);
@@ -31,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    expect(find.text('Session complete'), findsOneWidget);
+    expect(find.text('Trening odrađen'), findsOneWidget);
 
     final today = Dates.ymd(testNow);
     final completionsToday =

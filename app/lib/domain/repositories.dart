@@ -9,6 +9,10 @@ abstract class PatientsRepository {
 
   /// Returns the new single-use code (spec §3.2).
   Future<Result<String>> regenerateInvite(String patientId);
+
+  /// Removes the patient and everything hanging off them (assignments,
+  /// completion history). Owner request 2026-08-25: swipe-to-delete.
+  Future<Result<void>> deletePatient(String patientId);
 }
 
 abstract class LibraryRepository {

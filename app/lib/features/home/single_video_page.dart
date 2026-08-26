@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/demo_video_player.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 /// Full-screen browse for a single (non-protocol) video (spec §5.1
 /// "Also assigned"). Browsed only — no completion is recorded here (§4.6
@@ -10,12 +11,14 @@ class SingleVideoPage extends StatelessWidget {
   final String title;
   final String bodyPart;
   final int durationSec;
+  final String? videoId;
 
   const SingleVideoPage({
     super.key,
     required this.title,
     required this.bodyPart,
     required this.durationSec,
+    this.videoId,
   });
 
   @override
@@ -23,7 +26,10 @@ class SingleVideoPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.videoBg,
       body: SafeArea(
-        child: Column(
+        // Scrollable so a transient landscape frame (fullscreen-exit
+        // rotation) can never paint an overflow stripe.
+        child: SingleChildScrollView(
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
@@ -31,13 +37,14 @@ class SingleVideoPage extends StatelessWidget {
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close_rounded, color: AppColors.onAccent),
-                tooltip: 'Close',
+                tooltip: AppLocalizations.of(context).close,
               ),
             ),
             DemoVideoPlayer(
               title: title,
               bodyPart: bodyPart,
               durationSec: durationSec,
+              videoId: videoId,
               autoplay: true,
             ),
             Padding(
@@ -64,7 +71,7 @@ class SingleVideoPage extends StatelessWidget {
               ),
             ),
           ],
-        ),
+        )),
       ),
     );
   }

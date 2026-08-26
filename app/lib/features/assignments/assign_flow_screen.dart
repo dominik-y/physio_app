@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:physio_app/design_system/colors.dart';
+import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/features/assignments/assign_flow_bloc.dart';
 import 'package:physio_app/features/assignments/assign_fork_step.dart';
 import 'package:physio_app/features/assignments/dosage_editor_step.dart';
 import 'package:physio_app/features/assignments/video_picker_step.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 /// The single routed widget for the whole assign flow (plan amendment 7):
 /// fork → picker → dosage, navigated internally via bloc state, not
@@ -41,14 +43,16 @@ class _AssignFlowView extends StatelessWidget {
     return BlocConsumer<AssignFlowBloc, AssignFlowState>(
       listenWhen: (previous, current) => previous.submitStatus != current.submitStatus,
       listener: (context, state) {
+        final l = AppLocalizations.of(context);
         if (state.submitStatus == AssignSubmitStatus.success) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Assigned ✓')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l.assignedToast)));
           context.pop();
         } else if (state.submitStatus == AssignSubmitStatus.failure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: AppColors.danger,
-              content: Text(state.failureMessage ?? 'Something went wrong'),
+              content: Text(state.failureMessage ?? l.somethingWentWrong),
             ),
           );
         }
@@ -62,7 +66,7 @@ class _AssignFlowView extends StatelessWidget {
           },
           child: Scaffold(
             appBar: AppBar(
-              title: Text(_titleFor(state)),
+              title: Text(_titleFor(context, state)),
               leading: IconButton(
                 icon: Icon(atFork ? Icons.close : Icons.arrow_back),
                 onPressed: () {
@@ -74,25 +78,28 @@ class _AssignFlowView extends StatelessWidget {
                 },
               ),
             ),
-            body: switch (state.step) {
-              AssignFlowStep.fork => const AssignForkStep(),
-              AssignFlowStep.picker => const VideoPickerStep(),
-              AssignFlowStep.dosage => const DosageEditorStep(),
-            },
+            body: ContentColumn(
+              child: switch (state.step) {
+                AssignFlowStep.fork => const AssignForkStep(),
+                AssignFlowStep.picker => const VideoPickerStep(),
+                AssignFlowStep.dosage => const DosageEditorStep(),
+              },
+            ),
           ),
         );
       },
     );
   }
 
-  String _titleFor(AssignFlowState state) {
+  String _titleFor(BuildContext context, AssignFlowState state) {
+    final l = AppLocalizations.of(context);
     switch (state.step) {
       case AssignFlowStep.fork:
-        return 'Assign';
+        return l.assignTitle;
       case AssignFlowStep.picker:
-        return state.type == AssignmentType.single ? 'Send a video' : 'Choose videos';
+        return state.type == AssignmentType.single ? l.sendAVideo : l.chooseVideos;
       case AssignFlowStep.dosage:
-        return state.patientName.isEmpty ? 'Adjust dosage' : 'Adjust for ${state.patientName}';
+        return state.patientName.isEmpty ? l.adjustDosage : l.adjustFor(state.patientName);
     }
   }
 }

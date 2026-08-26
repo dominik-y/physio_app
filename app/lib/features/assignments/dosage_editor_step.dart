@@ -4,8 +4,17 @@ import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/features/assignments/assign_flow_bloc.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
-const _dayLabels = {1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 7: 'Sun'};
+Map<int, String> _dayLabels(AppLocalizations l) => {
+      1: l.dayMon,
+      2: l.dayTue,
+      3: l.dayWed,
+      4: l.dayThu,
+      5: l.dayFri,
+      6: l.daySat,
+      7: l.daySun,
+    };
 
 /// Dosage editor (spec §6.3, plan amendment 10): name + days header, a
 /// reorderable exercise list, then a footer carrying the save-as-template
@@ -39,6 +48,7 @@ class _DosageEditorStepState extends State<DosageEditorStep> {
       listenWhen: (previous, current) => current.name != _nameController.text && previous.name != current.name,
       listener: (context, state) => _nameController.text = state.name,
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         return Column(
           children: [
             Padding(
@@ -48,7 +58,7 @@ class _DosageEditorStepState extends State<DosageEditorStep> {
                 children: [
                   TextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Protocol name'),
+                    decoration: InputDecoration(labelText: l.protocolNameLabel),
                     onChanged: (value) => bloc.add(NameChanged(value)),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -56,7 +66,7 @@ class _DosageEditorStepState extends State<DosageEditorStep> {
                     spacing: AppSpacing.xs,
                     runSpacing: AppSpacing.xs,
                     children: [
-                      for (final entry in _dayLabels.entries)
+                      for (final entry in _dayLabels(l).entries)
                         FilterChip(
                           label: Text(entry.value),
                           selected: state.daysOfWeek.contains(entry.key),
@@ -69,10 +79,10 @@ class _DosageEditorStepState extends State<DosageEditorStep> {
             ),
             Expanded(
               child: state.items.isEmpty
-                  ? const EmptyState(
+                  ? EmptyState(
                       icon: Icons.playlist_remove,
-                      message: 'No exercises',
-                      detail: 'Add at least one to assign.',
+                      message: l.noExercises,
+                      detail: l.addAtLeastOne,
                     )
                   : ReorderableListView(
                       buildDefaultDragHandles: false,
@@ -106,6 +116,7 @@ class _ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: AppCard(
@@ -138,12 +149,12 @@ class _ExerciseCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: DosagePill(
-                    label: 'sets',
+                    label: l.setsPill,
                     value: '${item.sets}×',
                     overridden: item.overridden,
                     onTap: () => _editValue(
                       context,
-                      title: 'Sets',
+                      title: l.setsTitle,
                       value: item.sets,
                       min: 1,
                       step: 1,
@@ -155,12 +166,12 @@ class _ExerciseCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: DosagePill(
-                    label: 'reps',
+                    label: l.repsPill,
                     value: '${item.reps}',
                     overridden: item.overridden,
                     onTap: () => _editValue(
                       context,
-                      title: 'Reps',
+                      title: l.repsTitle,
                       value: item.reps,
                       min: 1,
                       step: 1,
@@ -172,16 +183,16 @@ class _ExerciseCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: DosagePill(
-                    label: 'hold',
+                    label: l.holdPill,
                     value: item.holdSec == 0 ? '—' : formatDuration(item.holdSec),
                     overridden: item.overridden,
                     onTap: () => _editValue(
                       context,
-                      title: 'Hold',
+                      title: l.holdTitle,
                       value: item.holdSec,
                       min: 0,
                       step: 5,
-                      format: (v) => v == 0 ? 'No hold' : formatDuration(v),
+                      format: (v) => v == 0 ? l.noHold : formatDuration(v),
                       onChanged: (v) => bloc.add(DosageChanged(item.videoId, holdSec: v)),
                     ),
                   ),
@@ -235,13 +246,15 @@ Future<void> _editValue(
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(AppLocalizations.of(dialogContext).cancel)),
               TextButton(
                 onPressed: () {
                   onChanged(current);
                   Navigator.of(dialogContext).pop();
                 },
-                child: const Text('Save'),
+                child: Text(AppLocalizations.of(dialogContext).save),
               ),
             ],
           );
@@ -259,6 +272,7 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
       child: Column(
@@ -268,22 +282,17 @@ class _Footer extends StatelessWidget {
           const Divider(height: 1),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Save as template'),
+            title: Text(l.saveAsTemplate),
             value: state.saveAsTemplate,
             onChanged: (_) => bloc.add(const SaveAsTemplateToggled()),
           ),
-          if (state.confirmArmed)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Text(
-                '${state.patientName} will have ${state.existingDailyTotal + state.items.length} exercises daily',
-                maxLines: 2,
-                style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w600),
-              ),
-            ),
           PrimaryButton(
-            label: state.confirmArmed ? 'Confirm anyway' : 'Assign to ${state.patientName}',
-            onPressed: state.items.isEmpty ? null : () => bloc.add(const SubmitPressed()),
+            label: l.assignToName(state.patientName),
+            // A nameless protocol renders as a blank card everywhere —
+            // require a name before submit (review finding 2026-08-25).
+            onPressed: state.items.isEmpty || state.name.trim().isEmpty
+                ? null
+                : () => bloc.add(const SubmitPressed()),
           ),
         ],
       ),

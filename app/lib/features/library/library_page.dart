@@ -4,8 +4,11 @@ import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
+import 'package:physio_app/features/home/single_video_page.dart';
 import 'package:physio_app/features/library/library_bloc.dart';
 import 'package:physio_app/features/library/upload_sheet.dart';
+import 'package:physio_app/l10n/body_parts.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 class LibraryPage extends StatelessWidget {
   const LibraryPage({super.key});
@@ -16,36 +19,39 @@ class LibraryPage extends StatelessWidget {
       create: (context) => LibraryBloc(context.read<LibraryRepository>()),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Library'),
+          title: Text(AppLocalizations.of(context).libraryTitle),
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Film / upload video',
+              tooltip: AppLocalizations.of(context).filmUploadVideo,
               onPressed: () => showUploadSheet(context),
             ),
           ],
         ),
         body: BlocBuilder<LibraryBloc, Map<String, List<VideoItem>>>(
           builder: (context, grouped) {
+            final l = AppLocalizations.of(context);
             if (grouped.isEmpty) {
-              return const EmptyState(
+              return EmptyState(
                 icon: Icons.video_library_outlined,
-                message: 'No videos yet',
-                detail: 'Film or upload your first exercise video.',
+                message: l.noVideosYet,
+                detail: l.filmFirstVideo,
               );
             }
-            return ListView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              children: [
-                for (final section in grouped.entries) ...[
-                  SectionHeader(title: section.key),
-                  for (final video in section.value) ...[
-                    _LibraryRow(video: video),
-                    const SizedBox(height: AppSpacing.sm),
+            return ContentColumn(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                children: [
+                  for (final section in grouped.entries) ...[
+                    SectionHeader(title: localizedBodyPart(l, section.key)),
+                    for (final video in section.value) ...[
+                      _LibraryRow(video: video),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
                   ],
+                  const SizedBox(height: AppSpacing.md),
                 ],
-                const SizedBox(height: AppSpacing.md),
-              ],
+              ),
             );
           },
         ),
@@ -61,6 +67,17 @@ class _LibraryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => SingleVideoPage(
+            title: video.title,
+            bodyPart: video.bodyPart,
+            durationSec: video.durationSec,
+            videoId: video.id,
+          ),
+        ),
+      ),
       child: Row(
         children: [
           VideoThumb(bodyPart: video.bodyPart),
@@ -78,7 +95,8 @@ class _LibraryRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${formatDuration(video.durationSec)} · used by ${video.usageCount}',
+                  AppLocalizations.of(context)
+                      .durationUsedBy(formatDuration(video.durationSec), video.usageCount),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13, color: AppColors.textMuted),

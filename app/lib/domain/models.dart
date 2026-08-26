@@ -73,6 +73,16 @@ class VideoItem extends Equatable {
   final int usageCount;
   final DateTime createdAt;
 
+  /// Firebase-only fields; null/'ready' in demo mode (in-memory playback
+  /// goes through DemoMediaStore instead).
+  final String? mediaUrl;
+  final String? posterUrl;
+  final String? storagePath;
+
+  /// 'uploading' until the Storage upload finishes — the assign flow must
+  /// not offer a video whose mediaUrl would snapshot as null.
+  final String status;
+
   const VideoItem({
     required this.id,
     required this.title,
@@ -82,11 +92,24 @@ class VideoItem extends Equatable {
     this.privateToPatientId,
     this.usageCount = 0,
     required this.createdAt,
+    this.mediaUrl,
+    this.posterUrl,
+    this.storagePath,
+    this.status = 'ready',
   });
 
   bool get isPrivate => visibility == 'private';
+  bool get isReady => status == 'ready';
 
-  VideoItem copyWith({String? title, String? bodyPart, int? durationSec, int? usageCount}) => VideoItem(
+  VideoItem copyWith(
+          {String? title,
+          String? bodyPart,
+          int? durationSec,
+          int? usageCount,
+          String? mediaUrl,
+          String? posterUrl,
+          String? status}) =>
+      VideoItem(
         id: id,
         title: title ?? this.title,
         bodyPart: bodyPart ?? this.bodyPart,
@@ -95,11 +118,27 @@ class VideoItem extends Equatable {
         privateToPatientId: privateToPatientId,
         usageCount: usageCount ?? this.usageCount,
         createdAt: createdAt,
+        mediaUrl: mediaUrl ?? this.mediaUrl,
+        posterUrl: posterUrl ?? this.posterUrl,
+        storagePath: storagePath,
+        status: status ?? this.status,
       );
 
   @override
-  List<Object?> get props =>
-      [id, title, bodyPart, durationSec, visibility, privateToPatientId, usageCount, createdAt];
+  List<Object?> get props => [
+        id,
+        title,
+        bodyPart,
+        durationSec,
+        visibility,
+        privateToPatientId,
+        usageCount,
+        createdAt,
+        mediaUrl,
+        posterUrl,
+        storagePath,
+        status,
+      ];
 }
 
 class TemplateItem extends Equatable {
@@ -155,6 +194,11 @@ class ExerciseItem extends Equatable {
   final int durationSec;
   final String bodyPart;
 
+  /// Snapshotted playback URLs (Firebase mode); null in demo mode, where
+  /// playback resolves through DemoMediaStore instead.
+  final String? mediaUrl;
+  final String? posterUrl;
+
   const ExerciseItem({
     required this.videoId,
     required this.order,
@@ -165,6 +209,8 @@ class ExerciseItem extends Equatable {
     required this.title,
     required this.durationSec,
     required this.bodyPart,
+    this.mediaUrl,
+    this.posterUrl,
   });
 
   ExerciseItem copyWith({int? order, int? sets, int? reps, int? holdSec, bool? overridden}) => ExerciseItem(
@@ -177,10 +223,13 @@ class ExerciseItem extends Equatable {
         title: title,
         durationSec: durationSec,
         bodyPart: bodyPart,
+        mediaUrl: mediaUrl,
+        posterUrl: posterUrl,
       );
 
   @override
-  List<Object?> get props => [videoId, order, sets, reps, holdSec, overridden, title, durationSec, bodyPart];
+  List<Object?> get props =>
+      [videoId, order, sets, reps, holdSec, overridden, title, durationSec, bodyPart, mediaUrl, posterUrl];
 }
 
 class Assignment extends Equatable {

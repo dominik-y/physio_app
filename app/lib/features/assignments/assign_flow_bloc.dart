@@ -497,10 +497,8 @@ class AssignFlowBloc extends Bloc<AssignFlowEvent, AssignFlowState> {
   }
 
   Future<void> _onSubmitPressed(SubmitPressed event, Emitter<AssignFlowState> emit) async {
-    if (state.existingDailyTotal > 0 && !state.confirmArmed) {
-      emit(state.copyWith(confirmArmed: true));
-      return;
-    }
+    // Spec §4.6 had a two-tap daily-workload guard here; removed on owner
+    // call 2026-08-25 — submit goes through directly.
     final assignment = Assignment(
       id: idFn(),
       patientId: patientId,

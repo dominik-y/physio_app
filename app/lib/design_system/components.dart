@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -148,15 +149,18 @@ class DosagePill extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: overridden ? AppColors.accentDeep : AppColors.text,
                   )),
-              Text(label.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                    color: AppColors.textMuted,
-                  )),
+              // Croatian labels run long (PONAVLJANJA) — scale, never clip.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(label.toUpperCase(),
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.6,
+                      color: AppColors.textMuted,
+                    )),
+              ),
             ],
           ),
         ),
@@ -168,30 +172,40 @@ class DosagePill extends StatelessWidget {
 enum ChipVariant { invited, private, newBadge, warning, danger }
 
 class StatusChip extends StatelessWidget {
-  final String label;
+  /// Explicit label; the named constructors leave it null and localize
+  /// their standard label at build time instead.
+  final String? label;
   final ChipVariant variant;
 
-  const StatusChip({super.key, required this.label, required this.variant});
+  const StatusChip({super.key, required String this.label, required this.variant});
 
   const StatusChip.invited({super.key})
-      : label = 'invited',
+      : label = null,
         variant = ChipVariant.invited;
   const StatusChip.private({super.key})
-      : label = 'private',
+      : label = null,
         variant = ChipVariant.private;
   const StatusChip.newBadge({super.key})
-      : label = 'New',
+      : label = null,
         variant = ChipVariant.newBadge;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final text = label ??
+        switch (variant) {
+          ChipVariant.invited => l.invitedChip,
+          ChipVariant.private => l.privateChip,
+          ChipVariant.newBadge => l.newChip,
+          _ => '',
+        };
     final (bg, fg) = switch (variant) {
-      ChipVariant.invited => (AppColors.border, AppColors.textMuted),
+      ChipVariant.invited => (AppColors.border, AppColors.chipText),
       // border fill, not bg: must stay visible on bg-colored secondary cards
-      ChipVariant.private => (AppColors.border, AppColors.textMuted),
+      ChipVariant.private => (AppColors.border, AppColors.chipText),
       ChipVariant.newBadge => (AppColors.accentSoft, AppColors.accentDeep),
-      ChipVariant.warning => (const Color(0xFFF6E3CE), AppColors.warning),
-      ChipVariant.danger => (const Color(0xFFF6D9D6), AppColors.danger),
+      ChipVariant.warning => (AppColors.warningSoft, AppColors.warningChipText),
+      ChipVariant.danger => (AppColors.dangerSoft, AppColors.danger),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -199,7 +213,7 @@ class StatusChip extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(AppRadii.chip),
       ),
-      child: Text(label,
+      child: Text(text,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg)),
@@ -343,6 +357,25 @@ class VideoThumb extends StatelessWidget {
           ? Icon(Icons.play_arrow_rounded,
               color: AppColors.onAccent.withOpacity(0.85), size: height * 0.55)
           : null,
+    );
+  }
+}
+
+/// Centers screen content in a max-width column so list screens read as a
+/// column, not an edge-to-edge stretch, on desktop/tablet (MacBook demo).
+class ContentColumn extends StatelessWidget {
+  final Widget child;
+  final double maxWidth;
+
+  const ContentColumn({super.key, required this.child, this.maxWidth = 720});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
+      ),
     );
   }
 }

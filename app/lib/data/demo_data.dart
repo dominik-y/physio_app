@@ -6,7 +6,7 @@ import 'package:physio_app/domain/models.dart';
 /// weeks of generated completion history. All history is generated relative
 /// to [now] via [Dates.scheduledDatesBetween] — never hand-written dates.
 class DemoData {
-  static const String physioName = 'Dr. Tomislav Perić';
+  static const String physioName = 'Tomislav Perić, mag. physioth.';
   static const String currentPatientId = 'pat-ana';
   static const String currentPatientName = 'Ana Kovačević';
 
@@ -50,18 +50,22 @@ class DemoData {
         );
 
     final videos = <VideoItem>[
-      video('v-quad', 'Seated quad extension', 'Knee', 105),
-      video('v-heel', 'Heel slides', 'Knee', 90),
-      video('v-bridge', 'Glute bridge', 'Knee', 120),
-      video('v-step', 'Controlled step-ups', 'Knee', 100),
-      video('v-pend', 'Pendulum swings', 'Shoulder', 80),
-      video('v-wall', 'Wall slides', 'Shoulder', 95),
-      video('v-band', 'Band external rotation', 'Shoulder', 110),
-      video('v-cat', 'Cat–camel', 'Lower back', 85),
-      video('v-bird', 'Bird dog', 'Lower back', 115),
-      video('v-pelvic', 'Pelvic tilt', 'Lower back', 75),
-      video('v-chin', 'Chin tucks', 'Neck', 60),
-      video('v-ana-focus', 'Ana — knee focus this week', 'Knee', 130,
+      video('v-quad', 'Ekstenzija koljena u sjedu', 'Knee', 105),
+      video('v-heel', 'Klizanje petom', 'Knee', 90),
+      video('v-bridge', 'Glutealni most', 'Knee', 120),
+      video('v-step', 'Kontrolirani uspon na step', 'Knee', 100),
+      video('v-pend', 'Pendularne kretnje', 'Shoulder', 80),
+      video('v-wall', 'Klizanje uz zid', 'Shoulder', 95),
+      video('v-band', 'Vanjska rotacija s trakom', 'Shoulder', 110),
+      video('v-cat', 'Mačka–deva', 'Lower back', 85),
+      video('v-bird', 'Ptica-pas', 'Lower back', 115),
+      video('v-pelvic', 'Nagib zdjelice', 'Lower back', 75),
+      video('v-chin', 'Uvlačenje brade', 'Neck', 60),
+      // Real Tendo footage (their Instagram reel, owner-approved 2026-08-25) —
+      // media registered as a bundled asset in PhysioApp.
+      video('v-tendo-drill', 'Agilnost — rad s loptom', 'Knee', 18,
+          createdDaysAgo: 5),
+      video('v-ana-focus', 'Ana — fokus na koljeno ovaj tjedan', 'Knee', 130,
           privateTo: currentPatientId, createdDaysAgo: 2),
     ];
     final videoById = {for (final v in videos) v.id: v};
@@ -72,21 +76,21 @@ class DemoData {
 
     final meniscus = ProtocolTemplate(
       id: 'tpl-meniscus',
-      name: 'Meniscus Recovery — Phase 1',
+      name: 'Oporavak meniskusa — faza 1',
       bodyPart: 'Knee',
       items: [ti('v-quad', 0, 3, 12), ti('v-heel', 1, 3, 10), ti('v-bridge', 2, 3, 8, 5), ti('v-step', 3, 2, 10)],
       createdAt: daysAgo(45),
     );
     final rotator = ProtocolTemplate(
       id: 'tpl-rotator',
-      name: 'Rotator Cuff — Early Stage',
+      name: 'Rotatorna manšeta — rana faza',
       bodyPart: 'Shoulder',
       items: [ti('v-pend', 0, 2, 15), ti('v-wall', 1, 3, 10), ti('v-band', 2, 3, 12)],
       createdAt: daysAgo(40),
     );
     final core = ProtocolTemplate(
       id: 'tpl-core',
-      name: 'Core Stability',
+      name: 'Stabilnost trupa',
       bodyPart: 'Lower back',
       items: [ti('v-cat', 0, 2, 10), ti('v-bird', 1, 3, 8, 3), ti('v-pelvic', 2, 3, 12)],
       createdAt: daysAgo(35),
@@ -133,7 +137,7 @@ class DemoData {
         id: 'as-ana-single',
         patientId: 'pat-ana',
         type: AssignmentType.single,
-        name: 'Ana — knee focus this week',
+        name: 'Ana — fokus na koljeno ovaj tjedan',
         bodyParts: const ['Knee'],
         daysOfWeek: const {1, 2, 3, 4, 5, 6, 7},
         items: const [
@@ -142,7 +146,7 @@ class DemoData {
             order: 0,
             sets: 1,
             reps: 1,
-            title: 'Ana — knee focus this week',
+            title: 'Ana — fokus na koljeno ovaj tjedan',
             durationSec: 130,
             bodyPart: 'Knee',
           ),
@@ -239,7 +243,7 @@ class DemoData {
         email: 'ivana.horvat@example.com',
         uid: 'uid-ivana',
         primaryBodyPart: 'Knee',
-        notes: 'Partial medial meniscectomy 6 weeks ago. Cleared for closed-chain work.',
+        notes: 'Parcijalna medijalna meniscektomija prije 6 tjedana. Odobren rad u zatvorenom kinetičkom lancu.',
         lastActiveAt: lastActive('pat-ivana'),
         createdAt: daysAgo(22),
       ),
@@ -249,7 +253,7 @@ class DemoData {
         email: 'marko.babic@example.com',
         uid: 'uid-marko',
         primaryBodyPart: 'Shoulder',
-        notes: 'Supraspinatus tendinopathy. Reports pain on pendulum swings — review dosage.',
+        notes: 'Tendinopatija supraspinatusa. Navodi bol kod pendularnih kretnji — provjeriti doziranje.',
         lastActiveAt: lastActive('pat-marko'),
         createdAt: daysAgo(11),
       ),
@@ -259,7 +263,7 @@ class DemoData {
         email: 'ana.kovacevic@example.com',
         uid: 'uid-ana',
         primaryBodyPart: 'Knee',
-        notes: 'ACL reconstruction rehab, month 3. Lower back strain from compensating.',
+        notes: 'Rehabilitacija nakon rekonstrukcije ACL-a, 3. mjesec. Istegnuće donjih leđa od kompenzacije.',
         lastActiveAt: lastActive('pat-ana'),
         createdAt: daysAgo(15),
       ),
@@ -269,7 +273,7 @@ class DemoData {
         email: 'josip.novak@example.com',
         uid: 'uid-josip',
         primaryBodyPart: 'Knee',
-        notes: 'Post-TKR. Was consistent, went quiet — call before Thursday appointment.',
+        notes: 'Nakon totalne endoproteze koljena. Bio dosljedan, prestao se javljati — nazvati prije termina u četvrtak.',
         lastActiveAt: lastActive('pat-josip'),
         createdAt: daysAgo(31),
       ),
@@ -279,7 +283,7 @@ class DemoData {
         email: 'petra.maric@example.com',
         uid: 'uid-petra',
         primaryBodyPart: 'Lower back',
-        notes: 'Chronic lumbar stiffness, desk job. Started today.',
+        notes: 'Kronična ukočenost lumbalne kralježnice, uredski posao. Počela danas.',
         lastActiveAt: null,
         createdAt: today,
       ),

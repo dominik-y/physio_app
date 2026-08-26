@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:physio_app/core/adherence.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 /// Seven dots, oldest first, last dot = today (spec §6.1).
 /// Filled accent = completed · amber = skipped · outline = nothing.
@@ -24,6 +25,36 @@ class WeekStrip extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// One-line key for the week strip (owner asked twice what the dots mean —
+/// nobody in the room should have to). Light theme only.
+class WeekStripLegend extends StatelessWidget {
+  const WeekStripLegend({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    Widget entry(DayMark mark, String label) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Dot(mark: mark, size: 8, onDark: false),
+            const SizedBox(width: 4),
+            Text(label,
+                style:
+                    const TextStyle(fontSize: 11.5, color: AppColors.textMuted)),
+          ],
+        );
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: 4,
+      children: [
+        entry(DayMark.done, l.legendDone),
+        entry(DayMark.skipped, l.legendSkipped),
+        entry(DayMark.empty, l.legendMissed),
+      ],
     );
   }
 }

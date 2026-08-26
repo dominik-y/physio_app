@@ -1,10 +1,22 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:physio_app/data/demo_media_store.dart';
 import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/features/library/upload_cubit.dart';
+import 'package:physio_app/l10n/body_parts.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
+import 'package:video_player/video_player.dart';
+
+/// Demo cap (owner call 2026-08-25): imports are held in memory, so clips
+/// are limited to 15 seconds. The Firebase pipeline lifts this.
+const demoImportMaxSec = 15;
 
 const _bodyPartOptions = ['Knee', 'Shoulder', 'Lower back', 'Neck'];
 const _minDurationSec = 30;
@@ -47,6 +59,13 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
   int _durationSec = 60;
   String? _privatePatientId;
 
+  // Locally picked clip (demo import): URL usable by the player and its
+  // probed duration. Null until a video is attached.
+  String? _pickedUrl;
+  int? _pickedDurationSec;
+  bool _probing = false;
+  bool _pickTooLong = false;
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +77,49 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
   void dispose() {
     _titleController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickVideo(ImageSource source) async {
+    final xfile = await ImagePicker().pickVideo(
+      source: source,
+      maxDuration: const Duration(seconds: demoImportMaxSec),
+    );
+    if (xfile == null || !mounted) return;
+    setState(() {
+      _probing = true;
+      _pickTooLong = false;
+    });
+    final url = xfile.path;
+    final probed = await _probeDurationSec(url);
+    if (!mounted) return;
+    setState(() {
+      _probing = false;
+      // Cameras respect maxDuration; gallery picks may not — enforce here.
+      if (probed != null && probed > demoImportMaxSec + 1) {
+        _pickTooLong = true;
+        _pickedUrl = null;
+        _pickedDurationSec = null;
+      } else {
+        _pickedUrl = url;
+        _pickedDurationSec = probed;
+        if (probed != null && probed > 0) _durationSec = probed;
+      }
+    });
+  }
+
+  static Future<int?> _probeDurationSec(String url) async {
+    final controller =
+        (kIsWeb || url.startsWith('blob:') || url.startsWith('http'))
+            ? VideoPlayerController.networkUrl(Uri.parse(url))
+            : VideoPlayerController.file(File(url));
+    try {
+      await controller.initialize();
+      return controller.value.duration.inSeconds;
+    } catch (_) {
+      return null;
+    } finally {
+      await controller.dispose();
+    }
   }
 
   void _submit() {
@@ -74,6 +136,10 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
     return BlocConsumer<UploadCubit, UploadState>(
       listener: (context, state) {
         if (state is UploadDone) {
+          // Attach the locally picked clip to the freshly created library
+          // entry so it plays for real everywhere in the demo.
+          final url = _pickedUrl;
+          if (url != null) DemoMediaStore.instance.register(state.video.id, url);
           Future<void>.delayed(const Duration(milliseconds: 500), () {
             if (context.mounted && Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -94,10 +160,10 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Film / upload video',
+                Text(AppLocalizations.of(context).filmUploadVideo,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
                 const SizedBox(height: AppSpacing.md),
                 if (state is UploadIdle) ..._buildForm(),
                 if (state is UploadCompressing || state is UploadUploading)
@@ -114,13 +180,22 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
   }
 
   List<Widget> _buildForm() {
+    final l = AppLocalizations.of(context);
     return [
-      TextField(
-        controller: _titleController,
-        decoration: const InputDecoration(labelText: 'Title'),
+      _VideoPickTile(
+        pickedDurationSec: _pickedUrl == null ? null : _pickedDurationSec,
+        probing: _probing,
+        tooLong: _pickTooLong,
+        onPickGallery: () => _pickVideo(ImageSource.gallery),
+        onPickCamera: kIsWeb ? null : () => _pickVideo(ImageSource.camera),
       ),
       const SizedBox(height: AppSpacing.md),
-      const Text('Body part', style: TextStyle(fontWeight: FontWeight.w600)),
+      TextField(
+        controller: _titleController,
+        decoration: InputDecoration(labelText: l.titleLabel),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      Text(l.bodyPartLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
       const SizedBox(height: AppSpacing.xs),
       Wrap(
         spacing: AppSpacing.xs,
@@ -128,7 +203,8 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
         children: [
           for (final part in _bodyPartOptions)
             ChoiceChip(
-              label: Text(part, maxLines: 1, overflow: TextOverflow.ellipsis),
+              label: Text(localizedBodyPart(l, part),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
               selected: _bodyPart == part,
               onSelected: (_) => setState(() => _bodyPart = part),
             ),
@@ -137,9 +213,9 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
       const SizedBox(height: AppSpacing.md),
       Row(
         children: [
-          const Expanded(
-            child: Text('Duration',
-                maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w600)),
+          Expanded(
+            child: Text(l.durationLabel,
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
           IconButton(
             icon: const Icon(Icons.remove_circle_outline),
@@ -172,11 +248,12 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
           return DropdownButtonFormField<String?>(
             value: displayedValue,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Private to patient (optional)'),
+            decoration: InputDecoration(labelText: l.privateToPatient),
             items: [
-              const DropdownMenuItem<String?>(
+              DropdownMenuItem<String?>(
                 value: null,
-                child: Text('None — shared library', maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(l.noneSharedLibrary,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               for (final patient in patients)
                 DropdownMenuItem<String?>(
@@ -190,19 +267,20 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
       ),
       const SizedBox(height: AppSpacing.lg),
       PrimaryButton(
-        label: 'Compress & upload',
+        label: l.compressAndUpload,
         onPressed: _titleController.text.trim().isEmpty ? null : _submit,
       ),
     ];
   }
 
   List<Widget> _buildProgress(UploadState state) {
+    final l = AppLocalizations.of(context);
     final compressProgress = state is UploadCompressing ? state.progress : 1.0;
     final uploadProgress = state is UploadUploading ? state.progress : 0.0;
     return [
-      _ProgressStage(label: 'Compressing…', progress: compressProgress),
+      _ProgressStage(label: l.compressing, progress: compressProgress),
       const SizedBox(height: AppSpacing.md),
-      _ProgressStage(label: 'Uploading…', progress: uploadProgress),
+      _ProgressStage(label: l.uploading, progress: uploadProgress),
     ];
   }
 
@@ -213,21 +291,122 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
         style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600),
       ),
       const SizedBox(height: AppSpacing.md),
-      SecondaryButton(label: 'Retry', onPressed: () => context.read<UploadCubit>().retry()),
+      SecondaryButton(
+          label: AppLocalizations.of(context).retry,
+          onPressed: () => context.read<UploadCubit>().retry()),
     ];
   }
 
   Widget _buildDone() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.check_circle, color: AppColors.accent, size: 28),
-          SizedBox(width: AppSpacing.sm),
-          Text('Added to library', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Icon(Icons.check_circle, color: AppColors.accent, size: 28),
+          const SizedBox(width: AppSpacing.sm),
+          Text(AppLocalizations.of(context).addedToLibrary,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
+    );
+  }
+}
+
+/// Attach-a-clip tile: dashed-feel outline, gallery + camera actions, and
+/// the attached/too-long states. Camera hidden on web.
+class _VideoPickTile extends StatelessWidget {
+  final int? pickedDurationSec;
+  final bool probing;
+  final bool tooLong;
+  final VoidCallback onPickGallery;
+  final VoidCallback? onPickCamera;
+
+  const _VideoPickTile({
+    required this.pickedDurationSec,
+    required this.probing,
+    required this.tooLong,
+    required this.onPickGallery,
+    this.onPickCamera,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final attached = pickedDurationSec != null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: attached ? const Color(0xFFEAF5FA) : AppColors.bg,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(
+            color: attached ? AppColors.accent : AppColors.border,
+            width: attached ? 1.4 : 1),
+      ),
+      child: probing
+          ? const Center(
+              child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5)),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      attached
+                          ? Icons.check_circle_rounded
+                          : Icons.videocam_outlined,
+                      color: attached
+                          ? AppColors.accentDeep
+                          : AppColors.textMuted,
+                      size: 22,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        attached
+                            ? l.videoReady(formatDuration(pickedDurationSec!))
+                            : l.pickVideoCta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                if (tooLong) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(l.videoTooLong,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.danger,
+                          fontWeight: FontWeight.w600)),
+                ],
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: onPickGallery,
+                      icon: const Icon(Icons.photo_library_outlined, size: 18),
+                      label: Text(
+                          attached ? l.replaceVideo : l.pickFromGallery),
+                    ),
+                    if (onPickCamera != null)
+                      OutlinedButton.icon(
+                        onPressed: onPickCamera,
+                        icon: const Icon(Icons.videocam_rounded, size: 18),
+                        label: Text(l.filmWithCamera),
+                      ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 }

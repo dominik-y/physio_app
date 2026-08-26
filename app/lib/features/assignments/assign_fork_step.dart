@@ -4,6 +4,8 @@ import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/features/assignments/assign_flow_bloc.dart';
+import 'package:physio_app/l10n/body_parts.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 /// Fork screen (spec §4.5, §6.3): the three assign paths, with recent
 /// templates listed directly beneath so the common case is one tap.
@@ -15,6 +17,7 @@ class AssignForkStep extends StatelessWidget {
     final bloc = context.read<AssignFlowBloc>();
     return BlocBuilder<AssignFlowBloc, AssignFlowState>(
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
@@ -23,13 +26,13 @@ class AssignForkStep extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('From a template',
+                  Text(l.fromATemplate,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.onAccent)),
                   const SizedBox(height: 2),
-                  Text('${state.templates.length} saved · pick one below',
+                  Text(l.templatesSavedPick(state.templates.length),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 13, color: AppColors.onAccent.withOpacity(0.75))),
@@ -39,41 +42,41 @@ class AssignForkStep extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             AppCard(
               onTap: () => bloc.add(const StartedCustom()),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Build a custom protocol',
+                  Text(l.buildCustomProtocol,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  SizedBox(height: 2),
-                  Text('Pick videos from the library, set order and dosage',
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(l.pickVideosSetOrder,
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
             AppCard(
               onTap: () => bloc.add(const StartedSingle()),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Send a single video',
+                  Text(l.sendSingleVideo,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  SizedBox(height: 2),
-                  Text('One clip, no protocol, no dosage ceremony',
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(l.oneClipNoCeremony,
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
                 ],
               ),
             ),
-            const SectionHeader(title: 'Recent templates'),
+            SectionHeader(title: l.recentTemplates),
             if (state.templates.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Text('No templates yet — build a custom protocol and save it as one.',
-                    style: TextStyle(color: AppColors.textMuted)),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Text(l.noTemplatesYetBuild,
+                    style: const TextStyle(color: AppColors.textMuted)),
               )
             else
               for (final template in state.templates) ...[
@@ -109,7 +112,11 @@ class _TemplateRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text('${template.bodyPart} · ${template.items.length} exercises',
+                Text(
+                    AppLocalizations.of(context).templateSubtitle(
+                        localizedBodyPart(
+                            AppLocalizations.of(context), template.bodyPart),
+                        template.items.length),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),

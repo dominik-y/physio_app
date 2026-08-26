@@ -3,6 +3,7 @@ import 'package:physio_app/core/adherence.dart';
 import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/design_system/week_strip.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 enum HeroState { start, resume, done, empty }
 
@@ -29,25 +30,26 @@ class SessionHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final headline = switch (state) {
-      HeroState.start => '$totalExercises exercise${totalExercises == 1 ? '' : 's'}',
-      HeroState.resume => '$remaining remaining',
-      HeroState.done => 'Session complete',
-      HeroState.empty => 'Nothing due today',
+      HeroState.start => l.exercisesCount(totalExercises),
+      HeroState.resume => l.remainingCount(remaining),
+      HeroState.done => l.sessionComplete,
+      HeroState.empty => l.nothingDueToday,
     };
     final cta = switch (state) {
-      HeroState.start => 'Start today’s session',
-      HeroState.resume => 'Resume session',
-      HeroState.done => 'Done for today',
+      HeroState.start => l.startTodaysSession,
+      HeroState.resume => l.resumeSession,
+      HeroState.done => l.doneForToday,
       HeroState.empty => null,
     };
 
     // Explicit label: the web engine drops this subtree's text semantics
     // otherwise, leaving screen readers with an unlabeled group.
     final semanticSummary = [
-      'Today’s session: $headline',
+      l.todaysSessionSemantic(headline),
       if (protocolNames.isNotEmpty) protocolNames.join(', '),
-      if (showNew) 'New assignment',
+      if (showNew) l.newAssignment,
     ].join('. ');
 
     return Container(
@@ -68,12 +70,12 @@ class SessionHeroCard extends StatelessWidget {
                 children: [
                   Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'TODAY’S SESSION',
+                  l.todaysSessionLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.4,
@@ -109,7 +111,8 @@ class SessionHeroCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       protocolNames.join(' · '),
-                      maxLines: 1,
+                      // Two protocols must both be visible at 320px.
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style:
                           TextStyle(fontSize: 14, color: AppColors.onAccent.withOpacity(0.72)),

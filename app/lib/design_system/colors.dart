@@ -29,6 +29,17 @@ abstract final class AppColors {
   static const warning = Color(0xFFB45309); // skipped-exercise indicator
   static const danger = Color(0xFFB3261E); // inactive-patient warning
 
+  /// Warning text on the dark video/session background — [warning] itself is
+  /// only 3.2:1 on [videoBg]; this light amber is 7.7:1.
+  static const warningOnDark = Color(0xFFF0A44C);
+
+  /// Small chip text on [border]-filled chips (invited/private): [textMuted]
+  /// is 4.06:1 there — below AA for 12px text; this step is 5.6:1.
+  static const chipText = Color(0xFF435862);
+
+  /// Warning chip text on [warningSoft]: [warning] is 4.02:1 there; 5.3:1.
+  static const warningChipText = Color(0xFF96450B);
+
   // Signal fills (chip backgrounds)
   static const warningSoft = Color(0xFFF6E3CE);
   static const dangerSoft = Color(0xFFF6D9D6);

@@ -12,6 +12,7 @@ import 'package:physio_app/features/library/library_page.dart';
 import 'package:physio_app/features/patients/patient_detail_page.dart';
 import 'package:physio_app/features/patients/patients_page.dart';
 import 'package:physio_app/features/role_gate/role_gate_page.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 import 'package:physio_app/features/session/session_page.dart';
 import 'package:physio_app/features/templates/templates_page.dart';
 
@@ -107,19 +108,19 @@ class PhysioShell extends StatelessWidget {
         selectedIndex: shell.currentIndex,
         onDestinationSelected: (i) =>
             shell.goBranch(i, initialLocation: i == shell.currentIndex),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-              icon: Icon(Icons.people_outline_rounded),
-              selectedIcon: Icon(Icons.people_rounded),
-              label: 'Patients'),
+              icon: const Icon(Icons.people_outline_rounded),
+              selectedIcon: const Icon(Icons.people_rounded),
+              label: AppLocalizations.of(context).navPatients),
           NavigationDestination(
-              icon: Icon(Icons.video_library_outlined),
-              selectedIcon: Icon(Icons.video_library_rounded),
-              label: 'Library'),
+              icon: const Icon(Icons.video_library_outlined),
+              selectedIcon: const Icon(Icons.video_library_rounded),
+              label: AppLocalizations.of(context).navLibrary),
           NavigationDestination(
-              icon: Icon(Icons.assignment_outlined),
-              selectedIcon: Icon(Icons.assignment_rounded),
-              label: 'Templates'),
+              icon: const Icon(Icons.assignment_outlined),
+              selectedIcon: const Icon(Icons.assignment_rounded),
+              label: AppLocalizations.of(context).navTemplates),
         ],
       ),
     );

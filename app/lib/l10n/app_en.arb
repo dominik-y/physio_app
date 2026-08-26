@@ -1,0 +1,334 @@
+{
+  "@@locale": "en",
+  "appTitle": "Poliklinika Tendo",
+  "roleGateSubtitle": "Showcase build — pick a side to explore",
+  "enterAsPhysio": "Enter as physio",
+  "enterAsPatient": "Enter as patient",
+  "roleGateFooter": "Demo data · resets on restart",
+  "profileTooltip": "Profile",
+  "switchRole": "Switch role",
+  "languageToggleLabel": "Change language",
+  "languageCroatian": "Hrvatski",
+  "languageEnglish": "English",
+  "cancel": "Cancel",
+  "save": "Save",
+  "close": "Close",
+  "retry": "Retry",
+  "add": "Add",
+  "somethingWentWrong": "Something went wrong",
+  "navPatients": "Patients",
+  "navLibrary": "Library",
+  "navTemplates": "Templates",
+  "patientsTitle": "Patients",
+  "noPatientsYet": "No patients yet",
+  "addPatientDetail": "Add a patient to send them an invite code.",
+  "addPatient": "Add patient",
+  "nameLabel": "Name",
+  "emailLabel": "Email",
+  "inviteCodeFor": "Invite code for {name}: {code}",
+  "@inviteCodeFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "daysSilent": "{days} days silent",
+  "@daysSilent": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitedNotRedeemed": "invited — code not redeemed",
+  "notStarted": "not started",
+  "noActivityYet": "no activity yet",
+  "today": "today",
+  "yesterday": "yesterday",
+  "daysAgo": "{days} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "activeProtocols": "Active protocols",
+  "noActiveProtocols": "No active protocols yet.",
+  "alsoAssigned": "Also assigned",
+  "privateNotes": "Private notes",
+  "notesHint": "Clinical context only you can see…",
+  "assignSomething": "Assign something",
+  "inviteCode": "Invite code",
+  "expiresOn": "expires {date}",
+  "@expiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "regenerateCode": "Regenerate code",
+  "newInviteCode": "New invite code: {code}",
+  "@newInviteCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "protocolSummary": "{count, plural, one{{count} exercise} other{{count} exercises}} · {done} done · {skipped} skipped",
+  "@protocolSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "exerciseNofM": "EXERCISE {n} OF {m}",
+  "@exerciseNofM": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "doneNextExercise": "Done · next exercise",
+  "skipThisOne": "Skip this one",
+  "sessionComplete": "Session complete",
+  "doneSkippedSummary": "{done} done · {skipped} skipped",
+  "@doneSkippedSummary": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "backToHome": "Back to home",
+  "nothingDueToday": "Nothing due today",
+  "setsPill": "sets",
+  "repsPill": "reps",
+  "holdPill": "hold",
+  "setsTitle": "Sets",
+  "repsTitle": "Reps",
+  "holdTitle": "Hold",
+  "noHold": "No hold",
+  "goodMorning": "Good morning",
+  "goodAfternoon": "Good afternoon",
+  "goodEvening": "Good evening",
+  "nothingAssignedYet": "Nothing assigned yet",
+  "physioWillSetYouUp": "Your physio will set you up.",
+  "todaysSessionLabel": "TODAY’S SESSION",
+  "exercisesCount": "{count, plural, one{{count} exercise} other{{count} exercises}}",
+  "@exercisesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "remainingCount": "{count} remaining",
+  "@remainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "doneForToday": "Done for today",
+  "startTodaysSession": "Start today’s session",
+  "resumeSession": "Resume session",
+  "todaysSessionSemantic": "Today’s session: {headline}",
+  "@todaysSessionSemantic": {
+    "placeholders": {
+      "headline": {
+        "type": "String"
+      }
+    }
+  },
+  "newAssignment": "New assignment",
+  "everythingDoneToday": "That’s everything for today — see you tomorrow.",
+  "setsTimesReps": "{sets}× {reps, plural, one{{reps} rep} other{{reps} reps}}",
+  "@setsTimesReps": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryTitle": "Library",
+  "filmUploadVideo": "Film / upload video",
+  "noVideosYet": "No videos yet",
+  "filmFirstVideo": "Film or upload your first exercise video.",
+  "durationUsedBy": "{duration} · used by {count}",
+  "@durationUsedBy": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "titleLabel": "Title",
+  "bodyPartLabel": "Body part",
+  "durationLabel": "Duration",
+  "privateToPatient": "Private to patient (optional)",
+  "noneSharedLibrary": "None — shared library",
+  "compressAndUpload": "Compress & upload",
+  "compressing": "Compressing…",
+  "uploading": "Uploading…",
+  "addedToLibrary": "Added to library",
+  "privateChip": "private",
+  "invitedChip": "invited",
+  "newChip": "New",
+  "bodyPartKnee": "Knee",
+  "bodyPartShoulder": "Shoulder",
+  "bodyPartLowerBack": "Lower back",
+  "bodyPartNeck": "Neck",
+  "assignTitle": "Assign",
+  "sendAVideo": "Send a video",
+  "chooseVideos": "Choose videos",
+  "adjustDosage": "Adjust dosage",
+  "adjustFor": "Adjust for {name}",
+  "@adjustFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "assignedToast": "Assigned ✓",
+  "fromATemplate": "From a template",
+  "templatesSavedPick": "{count} saved · pick one below",
+  "@templatesSavedPick": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "buildCustomProtocol": "Build a custom protocol",
+  "pickVideosSetOrder": "Pick videos from the library, set order and dosage",
+  "sendSingleVideo": "Send a single video",
+  "oneClipNoCeremony": "One clip, no protocol, no dosage ceremony",
+  "recentTemplates": "Recent templates",
+  "noTemplatesYetBuild": "No templates yet — build a custom protocol and save it as one.",
+  "templateSubtitle": "{bodyPart} · {count, plural, one{{count} exercise} other{{count} exercises}}",
+  "@templateSubtitle": {
+    "placeholders": {
+      "bodyPart": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pickVideos": "Pick videos",
+  "filmNew": "Film new",
+  "filmOneToStart": "Film one to get started.",
+  "sendTo": "Send to {name}",
+  "@sendTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addNExercises": "Add {count, plural, one{{count} exercise} other{{count} exercises}}",
+  "@addNExercises": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "protocolNameLabel": "Protocol name",
+  "dayMon": "Mon",
+  "dayTue": "Tue",
+  "dayWed": "Wed",
+  "dayThu": "Thu",
+  "dayFri": "Fri",
+  "daySat": "Sat",
+  "daySun": "Sun",
+  "noExercises": "No exercises",
+  "addAtLeastOne": "Add at least one to assign.",
+  "saveAsTemplate": "Save as template",
+  "assignToName": "Assign to {name}",
+  "@assignToName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "templatesTitle": "Templates",
+  "noTemplatesYet": "No templates yet",
+  "saveOneFromAssign": "Save one from the assign flow after building a protocol.",
+  "templatesSavedFromAssign": "New templates are saved from the assign flow",
+  "templateSubtitleWithMin": "{bodyPart} · {count, plural, one{{count} exercise} other{{count} exercises}} · ~{min} min",
+  "@templateSubtitleWithMin": {
+    "placeholders": {
+      "bodyPart": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "pickVideoCta": "Choose or film a video",
+  "pickFromGallery": "From gallery",
+  "filmWithCamera": "Film now",
+  "videoTooLong": "Demo limit is 15 seconds — pick a shorter clip.",
+  "videoReady": "Video attached · {duration}",
+  "@videoReady": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "replaceVideo": "Replace video",
+  "playVideo": "Play",
+  "pauseVideo": "Pause",
+  "removePatient": "Remove patient",
+  "removePatientConfirm": "Remove {name} and all their data?",
+  "@removePatientConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeAction": "Remove",
+  "legendDone": "done",
+  "legendSkipped": "skipped",
+  "legendMissed": "missed",
+  "fullscreenTooltip": "Fullscreen",
+  "exitFullscreenTooltip": "Exit fullscreen"
+}

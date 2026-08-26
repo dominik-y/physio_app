@@ -5,6 +5,8 @@ import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/features/assignments/assign_flow_bloc.dart';
 import 'package:physio_app/features/library/upload_sheet.dart';
+import 'package:physio_app/l10n/body_parts.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 const _fixedSectionOrder = ['Knee', 'Shoulder', 'Lower back', 'Neck'];
 
@@ -32,6 +34,7 @@ class VideoPickerStep extends StatelessWidget {
     final bloc = context.read<AssignFlowBloc>();
     return BlocBuilder<AssignFlowBloc, AssignFlowState>(
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         final grouped = _groupByBodyPart(state.videos);
         return Column(
           children: [
@@ -39,31 +42,31 @@ class VideoPickerStep extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
               child: Row(
                 children: [
-                  const Expanded(
-                    child: Text('Pick videos',
+                  Expanded(
+                    child: Text(l.pickVideos,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                   ),
                   TextButton(
                     onPressed: () => showUploadSheet(context),
-                    child: const Text('Film new'),
+                    child: Text(l.filmNew),
                   ),
                 ],
               ),
             ),
             Expanded(
               child: grouped.isEmpty
-                  ? const EmptyState(
+                  ? EmptyState(
                       icon: Icons.video_library_outlined,
-                      message: 'No videos yet',
-                      detail: 'Film one to get started.',
+                      message: l.noVideosYet,
+                      detail: l.filmOneToStart,
                     )
                   : ListView(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                       children: [
                         for (final section in grouped.entries) ...[
-                          SectionHeader(title: section.key),
+                          SectionHeader(title: localizedBodyPart(l, section.key)),
                           for (final video in section.value) ...[
                             _VideoRow(
                               video: video,
@@ -148,9 +151,10 @@ class _PickerFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final n = state.selectedVideoIds.length;
     final single = state.type == AssignmentType.single;
-    final label = single ? 'Send to ${state.patientName}' : 'Add $n exercises';
+    final label = single ? l.sendTo(state.patientName) : l.addNExercises(n);
     final enabled = single ? n == 1 : n > 0;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),

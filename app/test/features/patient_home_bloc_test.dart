@@ -39,7 +39,7 @@ void main() {
       await settle();
 
       final single = b.state.singles.singleWhere((row) => row.assignmentId == 'as-ana-single');
-      expect(single.title, 'Ana — knee focus this week');
+      expect(single.title, 'Ana — fokus na koljeno ovaj tjedan');
       expect(single.seen, isFalse);
 
       b.add(const AssignmentOpened('as-ana-single'));

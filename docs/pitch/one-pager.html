@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<title>Poliklinika Tendo — digitalna rehabilitacija</title>
+<style>
+  /* A4 print sheet. Print from Chrome: File → Print → Save as PDF, margins: none. */
+  @page { size: A4; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Manrope", -apple-system, "Segoe UI", sans-serif;
+    color: #03262F;
+    width: 210mm; min-height: 297mm;
+    padding: 16mm 18mm;
+    background: #F5F8F9;
+  }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10mm; }
+  header img { width: 52mm; }
+  .tag { font-size: 10.5pt; color: #546D7A; text-align: right; line-height: 1.4; }
+  h1 { font-family: Georgia, "Libre Baskerville", serif; font-size: 21pt; line-height: 1.25; margin-bottom: 4mm; }
+  h1 em { font-style: normal; color: #03607F; }
+  .lead { font-size: 11.5pt; line-height: 1.55; color: #26444D; margin-bottom: 8mm; max-width: 160mm; }
+  .cols { display: flex; gap: 6mm; margin-bottom: 8mm; }
+  .card { flex: 1; background: #fff; border: 1px solid #D5E0E5; border-radius: 4mm; padding: 6mm; }
+  .card h2 { font-size: 10pt; letter-spacing: 0.08em; text-transform: uppercase; color: #03607F; margin-bottom: 3mm; }
+  .card ul { list-style: none; }
+  .card li { font-size: 10.5pt; line-height: 1.5; padding-left: 5mm; position: relative; margin-bottom: 2mm; }
+  .card li::before { content: "—"; position: absolute; left: 0; color: #0090C3; }
+  .price { display: flex; gap: 6mm; margin-bottom: 8mm; }
+  .price .card { display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  .price .num { font-size: 22pt; font-weight: 800; color: #03607F; }
+  .price .per { font-size: 10pt; color: #546D7A; margin-top: 1mm; }
+  .timeline { background: #03607F; color: #fff; border-radius: 4mm; padding: 6mm 8mm; margin-bottom: 10mm; display: flex; align-items: center; gap: 8mm; }
+  .timeline .big { font-size: 16pt; font-weight: 800; white-space: nowrap; }
+  .timeline p { font-size: 10.5pt; line-height: 1.5; color: #B5E3F2; }
+  footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #D5E0E5; padding-top: 5mm; }
+  footer .contact { font-size: 10.5pt; line-height: 1.6; }
+  footer .contact strong { font-size: 11.5pt; }
+  footer .note { font-size: 9pt; color: #546D7A; text-align: right; max-width: 70mm; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <header>
+    <img src="tendo_logo.png" alt="Poliklinika Tendo">
+    <div class="tag">Digitalna rehabilitacija<br>za vaše pacijente</div>
+  </header>
+
+  <h1>Vaše vježbe, u džepu svakog pacijenta — <em>i uvid tko ih stvarno radi.</em></h1>
+
+  <p class="lead">
+    Aplikacija Poliklinike Tendo povezuje terapeuta i pacijenta između dolazaka:
+    terapeut u pola minute zada program vježbi sa svojim video&nbsp;uputama, pacijent kod kuće
+    prolazi vođeni trening na mobitelu, a klinika vidi tko vježba — i tko se prestao javljati,
+    prije nego što odustane od terapije.
+  </p>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Za terapeute</h2>
+      <ul>
+        <li>Vlastita videoteka vježbi — snimite jednom, zadajte svima</li>
+        <li>Protokoli i predlošci s doziranjem (serije · ponavljanja · zadržaj)</li>
+        <li>Pregled pridržavanja po pacijentu, tjedan po tjedan</li>
+        <li>Upozorenje kad se pacijent prestane javljati</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Za pacijente</h2>
+      <ul>
+        <li>Vođeni trening — video, doziranje, jedan gumb</li>
+        <li>Pozivni kod od terapeuta, bez kompliciranih registracija</li>
+        <li>Na hrvatskom, uz engleski za strane pacijente</li>
+        <li>iPhone i Android</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="price">
+    <div class="card">
+      <div class="num">1.800 €</div>
+      <div class="per">jednokratno · postavljanje, brendiranje i pokretanje</div>
+    </div>
+    <div class="card">
+      <div class="num">170 €/mj</div>
+      <div class="per">održavanje, poslužitelji i podrška — manje od jednog dolaska pacijenta mjesečno</div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="big">Start za 2 tjedna</div>
+    <p>Od potpisa do prvih pacijenata: računi za terapeute, vaši videi u aplikaciji,
+       pozivni kodovi spremni. Bez posla za vaš tim — sve postavljamo mi.</p>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <strong>Dominik Marić</strong><br>
+      [telefon] · [e-mail]
+    </div>
+    <div class="note">Aplikacija je referenca za samostalno vježbanje i praćenje —
+      ne zamjenjuje terapiju u klinici.</div>
+  </footer>
+</body>
+</html>

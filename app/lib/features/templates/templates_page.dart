@@ -4,6 +4,8 @@ import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/tokens.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/features/templates/templates_bloc.dart';
+import 'package:physio_app/l10n/body_parts.dart';
+import 'package:physio_app/l10n/gen/app_localizations.dart';
 
 /// Read-only template list (spec §4.5.2 — templates are created via the
 /// assign flow's "save as template", not authored here).
@@ -18,18 +20,21 @@ class TemplatesPage extends StatelessWidget {
         libraryRepository: context.read<LibraryRepository>(),
       ),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Templates')),
+        appBar:
+            AppBar(title: Text(AppLocalizations.of(context).templatesTitle)),
         body: BlocBuilder<TemplatesBloc, TemplatesState>(
           builder: (context, state) {
+            final l = AppLocalizations.of(context);
             if (state.loading) return const SizedBox.shrink();
             if (state.rows.isEmpty) {
-              return const EmptyState(
+              return EmptyState(
                 icon: Icons.assignment_outlined,
-                message: 'No templates yet',
-                detail: 'Save one from the assign flow after building a protocol.',
+                message: l.noTemplatesYet,
+                detail: l.saveOneFromAssign,
               );
             }
-            return ListView(
+            return ContentColumn(
+                child: ListView(
               padding: const EdgeInsets.all(AppSpacing.md),
               children: [
                 for (final row in state.rows) ...[
@@ -38,15 +43,15 @@ class TemplatesPage extends StatelessWidget {
                 ],
                 const SizedBox(height: AppSpacing.md),
                 // Soft anchor so a short list reads as calm, not unfinished.
-                const Center(
+                Center(
                   child: Text(
-                    'New templates are saved from the assign flow',
+                    l.templatesSavedFromAssign,
                     textAlign: TextAlign.center,
                     style: AppTypography.bodySmall,
                   ),
                 ),
               ],
-            );
+            ));
           },
         ),
       ),
@@ -61,11 +66,13 @@ class _TemplateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = row.template;
     final count = t.items.length;
     final subtitle = row.totalDurationSec == null
-        ? '$count exercises'
-        : '${t.bodyPart} · $count exercises · ~${(row.totalDurationSec! / 60).ceil()} min';
+        ? l.exercisesCount(count)
+        : l.templateSubtitleWithMin(localizedBodyPart(l, t.bodyPart), count,
+            (row.totalDurationSec! / 60).ceil());
     return AppCard(
       child: Row(
         children: [
@@ -76,12 +83,14 @@ class _TemplateCard extends StatelessWidget {
                 Text(t.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: AppSpacing.xs),
                 Text(subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textMuted)),
               ],
             ),
           ),

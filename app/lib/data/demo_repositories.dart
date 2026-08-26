@@ -4,6 +4,16 @@ import 'package:physio_app/core/watchable.dart';
 import 'package:physio_app/data/demo_data.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
+import 'package:physio_app/domain/repository_bundle.dart';
+
+/// The in-memory bundle the demo entrypoint (and the pitch build) runs on.
+RepositoryBundle demoRepositoryBundle(DemoStore store) => RepositoryBundle(
+      patients: DemoPatientsRepository(store),
+      library: DemoLibraryRepository(store),
+      templates: DemoTemplatesRepository(store),
+      assignments: DemoAssignmentsRepository(store),
+      completions: DemoCompletionsRepository(store),
+    );
 
 /// Shared in-memory state behind all demo repositories. One instance per app
 /// run; every mutation goes through [Watchable.update] so open screens react.
@@ -64,6 +74,14 @@ class DemoPatientsRepository implements PatientsRepository {
   Future<Result<void>> updateNotes(String patientId, String notes) async {
     store.patients.update(
         (list) => [for (final p in list) p.id == patientId ? p.copyWith(notes: notes) : p]);
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> deletePatient(String patientId) async {
+    store.patients.update((list) => [for (final p in list) if (p.id != patientId) p]);
+    store.assignments.update((list) => [for (final a in list) if (a.patientId != patientId) a]);
+    store.completions.update((map) => {...map}..remove(patientId));
     return const Ok(null);
   }
 
