@@ -12,12 +12,23 @@ The live list. Checked = done and verified.
 - [x] Re-run: `flutter analyze` clean, 123 Flutter tests green, Playwright 12/12 on rebuilt bundle
 - [x] Before/after screenshots into vault (`Design System/baseline-2026-08-25` vs `after-2026-08-25`)
 
+## Now — pitch week (2026-08-25, pitch ≤1 week out; see [[Pitch Plan]])
+
+- [x] Croatian localization: full l10n (gen-l10n, ARB en+hr, ICU plurals), Croatian default, 🇭🇷/🇬🇧 switcher (role gate top-right + role menu), persisted via shared_preferences
+- [x] Croatian fixture data: exercise/protocol names + clinical notes translated
+- [ ] Dominik reviews the Croatian strings (clinical terminology especially) — `app/lib/l10n/app_hr.arb` + `app/lib/data/demo_data.dart`
+- [x] 15 s video import, demo-grade: gallery/camera via image_picker, duration probed + capped, in-memory `DemoMediaStore`, real playback via video_player everywhere (library rows now tappable)
+- [x] Tendo reel #8 pulled, transcoded to H.264, bundled + seeded as "Agilnost — rad s loptom" — plays on web and iOS simulator
+- [ ] Native iOS build on Dominik's iPhone — app already running on the SIMULATOR (com.tendo.physioApp); physical device needs plugging in + free provisioning; re-sign day before pitch
+- [ ] One-pager: drafted at `docs/pitch/one-pager.html` (print to PDF from Chrome) — Dominik fills [telefon]/[e-mail] and reviews
+
 ## Waiting on Dominik
 
-- [ ] **First git commit** — repo is initialized, nothing committed (explicit "commit" required)
 - [ ] Decide when to start the Firebase phase (needs his Google account + Blaze billing, interactive)
 
-## Firebase phase (next, spec §13 order)
+## Firebase phase (after signature: 2-week full-time build, spec §13 order)
+
+> **Canonical plan now lives in [[Firebase Plan]]** (day-by-day schedule, verified version pins, ask-list, open decisions; full designs under vault/Firebase/). The bullets below are the coarse outline it supersedes.
 
 - [ ] Firebase project + Blaze + emulator suite
 - [ ] Security rules with emulator tests FIRST (invite redemption via rules is the highest-risk piece; Cloud Function is the named fallback)

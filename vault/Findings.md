@@ -53,3 +53,42 @@ The app now wears the real clinic brand, extracted directly from poliklinika-ten
 
 - Chrome-extension clicks sometimes double-fire on Flutter web canvas; widget tests tap once and all guards held there. Playwright behaves better for scripted testing.
 - Flutter web renders to canvas → DOM-based assertions are useless; test via screenshots, console errors, and coordinate clicks (or enable Flutter semantics for accessibility-tree testing).
+
+## Pitch-week sprint (2026-08-25, autonomous session)
+
+**Croatian localization** — full gen-l10n (ARB en+hr, ICU plurals with hr one/few/other), Croatian default, persisted 🇭🇷/🇬🇧 toggle (role gate + role menu), fixtures translated (exercise names, protocol names, clinical notes). Convention: button labels use short ti-imperative (Croatian app standard, per Google hr), helper/descriptive text uses formal vi — flagged by review as "mixed", kept deliberately.
+
+**15 s demo video import** — image_picker (gallery/camera) + video_player; duration probed via a throwaway controller, capped at 15 s (`demoImportMaxSec`); in-memory `DemoMediaStore` maps videoId→blob/file URL; `DemoVideoPlayer` transparently swaps to `RealVideoPlayer` when media exists. Library rows became tappable (full-screen player).
+
+**Multi-agent review (32 agents: 6 finders × flows/320px/desktop/a11y/Croatian/code + adversarial verifiers)** — 26 findings, 11 confirmed-worth-fixing. Fixed:
+- Empty protocol name could create blank-titled protocol + template cards → submit disabled until named
+- "Uđi kao fizioterapeut" ellipsized at 320 px (first tap of the demo) → maxLines 2
+- Desktop stretch: no max content width anywhere → shared `ContentColumn` (720 px) on all list screens
+- Patient-detail CTA below the fold → pinned bottom bar (learned: a plain `Center` in `bottomNavigationBar` expands to fill the scaffold and zero-heights the body — use `Center(heightFactor: 1)`)
+- Session controls full-bleed vs centered video → constrained to 560
+- "Preskoči ovu" 3.2:1 on dark → new `warningOnDark` #F0A44C (7.7:1); chip text contrast fixed via `chipText` #435862 / `warningChipText` #96450B
+- Croatian terms: zadržaj→**izdržaj**, Donja leđa→**Donji dio leđa**, "Dr." dropped (physios aren't Dr. in Croatia → "Tomislav Perić, mag. physioth."), "Novo zaduženje"→"Novi program vježbi"
+- a11y: role cards announced as buttons, close/play/pause got labels, dosage-pill labels FittedBox (PONAVLJANJA clipped at 320)
+- LocaleCubit unit tests added (default/restore/toggle/fallback)
+
+**E2E gotcha**: tapping by short labels ("EN") matches substrings case-insensitively ("ENter as physio") — tap toggles by their semantic label instead.
+
+Verification after everything: analyzer 0 · 127 Flutter tests · 16/16 Playwright (two viewports) · iOS simulator build green (ios/ scaffolded with Croatian permission strings, display name Poliklinika Tendo).
+
+Known/parked: VideoFrame GC console warning from video_player on web (benign, not tripping the console gate); locale persistence is fire-and-forget; DateFormat relies on Intl.defaultLocale (fine while locale switching also sets it).
+
+## Tendo reel + simulator (2026-08-25 evening)
+
+- Reel #8 ("PRESEASON MODE ON", instagram.com/reel/DZHhLgLNDGE) pulled via logged-in Chrome session: Instagram serves separate DASH tracks (VP9 video + AAC audio) — sniffed both mp4 CDN URLs from network requests, stripped `bytestart/byteend` params to get full files, muxed + transcoded with ffmpeg to H.264 720p (VP9 does NOT play on iOS AVPlayer). Bundled at `app/assets/videos/tendo_reel8.mp4`, seeded as library video `v-tendo-drill` ("Agilnost — rad s loptom"), registered in `DemoMediaStore` at app init.
+- **Gotcha:** `video_player` web has no asset source — on web, bundle assets must load as network URLs (`assets/<key>`). `RealVideoPlayer` handles the split (`asset:` scheme → networkUrl on web, VideoPlayerController.asset on device).
+- **Gotcha:** `flutter create --platforms=ios .` left a stale empty `web_plugin_registrant.dart` — web builds threw "init() has not been implemented" from video_player. Fix: `rm -rf .dart_tool/flutter_build` and rebuild.
+- **Gotcha:** python `http.server` ignores Range headers; swapped the demo server on :7357 to `npx http-server` (206 support) for video playback.
+- App runs on the iPhone simulator (`xcrun simctl install/launch com.tendo.physioApp`) with the reel playing natively.
+
+## Owner feedback round (2026-08-25 late)
+
+- **Swipe-to-delete patients** — Dismissible (endToStart) on patient cards, red delete background, Croatian confirm dialog; `deletePatient` added to PatientsRepository (removes patient + assignments + completions). Gotcha: on web, Dismissible merges the card into one label-only semantics node and the tap action disappears — wrap the child in `Semantics(container: true, explicitChildNodes: true)`.
+- **Daily-workload guard removed** (spec §4.6 two-tap confirm) on owner call — SubmitPressed submits directly; warning text + "Svejedno potvrdi" gone from UI and ARB.
+- **Patient detail densified** — toolbar 44px, list top padding 0; header now sits right under the back arrow, protocols/singles/notes above the fold.
+- Hero-card dots = last-7-days week strip (done/skipped/empty, today rightmost) — owner asked what they mean; candidate improvement: tiny legend or day initials.
+

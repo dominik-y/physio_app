@@ -38,6 +38,9 @@ Source of truth in code: `app/lib/design_system/colors.dart`. This page explains
 | `warning` | `#B45309` | Skipped exercise — amber, informational, never guilt-red |
 | `danger` | `#B3261E` | Patient silence (≥7 days) — reserved for the one thing that demands action |
 | `warningSoft` | `#F6E3CE` | Warning chip fill |
+| `warningOnDark` | `#F0A44C` | Warning text on `videoBg` (7.7:1) — `warning` itself is only 3.2:1 there |
+| `chipText` | `#435862` | Small chip text on `border`-filled chips (5.6:1; `textMuted` fails AA at 12 px) |
+| `warningChipText` | `#96450B` | Warning-chip text on `warningSoft` (5.3:1) |
 | `dangerSoft` | `#F6D9D6` | Danger chip fill |
 
 ## Logo
