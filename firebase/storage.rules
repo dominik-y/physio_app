@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// Tendo physio app — Storage rules.
+// Only physios (custom claim) write; any authenticated user may read —
+// private videos are protected by unguessable auto-id paths + Firestore
+// doc-read rules gating URL disclosure (accepted single-tenant posture;
+// tighten via cross-service firestore.get() before any second clinic).
+// NOTE: `allow write` would also cover delete, where request.resource is
+// null and the size/contentType checks always fail — delete MUST stay a
+// separate rule.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /clinics/{clinicId}/videos/{videoId}/{fileName} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+        && request.auth.token.get('role', '') == 'physio'
+        && request.resource.size < 100 * 1024 * 1024
+        && (
+             (fileName == 'video.mp4'
+               && request.resource.contentType.matches('video/.*'))
+             || (fileName == 'poster.jpg'
+               && request.resource.contentType.matches('image/.*'))
+           );
+      allow delete: if request.auth != null
+        && request.auth.token.get('role', '') == 'physio';
+    }
+    match /{allOther=**} {
+      allow read, write: if false;
+    }
+  }
+}

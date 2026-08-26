@@ -1,0 +1,130 @@
+rules_version = '2';
+
+// Tendo physio app — Firestore rules.
+// Roles: physio = custom claim `role: 'physio'` (set by the admin
+// provisioning script); patient = an Auth uid written onto exactly one
+// patients/{id} doc by the rules-validated redemption batch below.
+// Tested by firebase/tests/*.test.js — change nothing here without a test.
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isPhysio() {
+      return signedIn() && request.auth.token.get('role', '') == 'physio';
+    }
+    function patientDoc(pid) {
+      return get(/databases/$(db)/documents/patients/$(pid)).data;
+    }
+    function ownsPatient(pid) {
+      return signedIn() && patientDoc(pid).uid == request.auth.uid;
+    }
+    function onlyKeys(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(keys);
+    }
+
+    match /patients/{pid} {
+      allow get, list: if isPhysio()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, delete: if isPhysio();
+      allow update: if isPhysio()
+        || selfTouch()
+        || redemption();
+
+      // The record() batch: completion write + lastActiveAt bump, nothing else.
+      function selfTouch() {
+        return signedIn()
+          && resource.data.uid == request.auth.uid
+          && onlyKeys(['lastActiveAt'])
+          && request.resource.data.lastActiveAt is timestamp;
+      }
+
+      // Invite redemption, patient side: claim yourself exactly once, and
+      // only inside a batch that also consumed THIS patient's current invite
+      // (getAfter sees post-batch state — a lone patient update fails).
+      function redemption() {
+        return signedIn()
+          && resource.data.uid == null
+          && request.resource.data.uid == request.auth.uid
+          && onlyKeys(['uid'])
+          && resource.data.inviteCode != null
+          && get(/databases/$(db)/documents/invites/$(resource.data.inviteCode))
+               .data.redeemed == false
+          && get(/databases/$(db)/documents/invites/$(resource.data.inviteCode))
+               .data.expiresAt > request.time
+          && getAfter(/databases/$(db)/documents/invites/$(resource.data.inviteCode))
+               .data.redeemedBy == request.auth.uid;
+      }
+    }
+
+    match /invites/{code} {
+      // By-ID lookup only for redemption candidates; enumeration is
+      // physio-only. Redeemed/expired invites are dead to non-physios.
+      allow get: if isPhysio()
+        || (signedIn()
+            && resource.data.redeemed == false
+            && resource.data.expiresAt > request.time);
+      allow list, create, delete: if isPhysio();
+      allow update: if isPhysio() || redeem();
+
+      // Invite redemption, invite side: consume exactly once, as yourself,
+      // only inside a batch that also linked the matching patient doc.
+      function redeem() {
+        return signedIn()
+          && resource.data.redeemed == false
+          && resource.data.expiresAt > request.time
+          && request.resource.data.redeemed == true
+          && request.resource.data.redeemedBy == request.auth.uid
+          && request.resource.data.redeemedAt is timestamp
+          && onlyKeys(['redeemed', 'redeemedBy', 'redeemedAt'])
+          && getAfter(/databases/$(db)/documents/patients/$(resource.data.patientId))
+               .data.uid == request.auth.uid
+          && getAfter(/databases/$(db)/documents/patients/$(resource.data.patientId))
+               .data.inviteCode == code;
+      }
+    }
+
+    // Patients never read these: ExerciseItem snapshots carry everything a
+    // patient needs (spec §4.7), and clinical notes are physio-only by
+    // owner decision 2026-08-26.
+    match /videos/{vid}        { allow read, write: if isPhysio(); }
+    match /templates/{tid}     { allow read, write: if isPhysio(); }
+    match /patientNotes/{pid}  { allow read, write: if isPhysio(); }
+
+    // Profile docs are provisioned by the admin script only.
+    match /physios/{uid} {
+      allow read: if isPhysio();
+      allow write: if false;
+    }
+
+    match /assignments/{aid} {
+      allow get, list: if isPhysio() || ownsPatient(resource.data.patientId);
+      allow create, delete: if isPhysio();
+      allow update: if isPhysio()
+        || (ownsPatient(resource.data.patientId)
+            && onlyKeys(['seenByPatient'])
+            && request.resource.data.seenByPatient == true);
+    }
+
+    match /completions/{cid} {
+      allow get, list: if isPhysio() || ownsPatient(resource.data.patientId);
+      // Patient-recorded, shape-validated, idempotent by construction: the
+      // doc ID must be derived from its own data, so offline replays and
+      // double-taps collapse onto one doc.
+      allow create, update: if signedIn()
+        && ownsPatient(request.resource.data.patientId)
+        && cid == request.resource.data.date + '_'
+                + request.resource.data.assignmentId + '_'
+                + request.resource.data.videoId
+        && request.resource.data.keys().hasOnly(
+             ['patientId', 'date', 'assignmentId', 'videoId', 'status', 'at'])
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('\\d{4}-\\d{2}-\\d{2}')
+        && request.resource.data.status in ['done', 'skipped']
+        && request.resource.data.at is timestamp
+        && get(/databases/$(db)/documents/assignments/$(request.resource.data.assignmentId))
+             .data.patientId == request.resource.data.patientId;
+      allow delete: if isPhysio(); // cascade delete only
+    }
+  }
+}

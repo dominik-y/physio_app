@@ -1,0 +1,18 @@
+{
+  "name": "tendo-firebase-rules",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only auth,firestore,storage 'vitest run'",
+    "test:watch": "vitest",
+    "emulators": "firebase emulators:start --only auth,firestore,storage",
+    "seed": "node admin/seed_emulator.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.14.1",
+    "firebase-admin": "^14.3.0",
+    "firebase-tools": "^13.35.1",
+    "vitest": "^2.1.9"
+  }
+}
