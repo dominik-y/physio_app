@@ -55,7 +55,7 @@ class SessionHeroCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: AppColors.heroGradient,
-        borderRadius: BorderRadius.circular(AppRadii.card + 3),
+        borderRadius: BorderRadius.circular(AppRadii.card),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -97,7 +97,7 @@ class SessionHeroCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 26,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.onAccent,
                     height: 1.15,
                   ),

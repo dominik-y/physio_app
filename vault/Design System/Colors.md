@@ -10,7 +10,7 @@ Source of truth in code: `app/lib/design_system/colors.dart`. This page explains
 |---|---|---|
 | `bg` | `#F5F8F9` | Screen background — cool near-white |
 | `surface` | `#FFFFFF` | Cards, rows, inputs |
-| `border` | `#D5E0E5` | Hairlines, card borders, empty strip dots |
+| `border` | `#D5E0E5` | Hairlines, input borders, empty strip dots. Cards are borderless since the 2026-08-27 MacJack merge — one soft ink shadow (`AppShadows.card`, `text` at 12%) does the lifting |
 | `videoBg` | `#03262F` | Session player & single-video page — Tendo's deep petrol |
 
 ## Text
@@ -26,7 +26,8 @@ Source of truth in code: `app/lib/design_system/colors.dart`. This page explains
 |---|---|---|
 | `accent` | `#0090C3` | Tendo blue (the logo color). Fills, gradients, large graphics ONLY — 3.4:1 on `bg`, so never small text and never a background for white text |
 | `accentDeep` | `#03607F` | Buttons, text-level accent, selected nav — white on it is 7.1:1 |
-| `accentSoft` | `#B5E3F2` | Hero eyebrow, New badge fill, FAB, subtle fills |
+| `accentSoft` | `#B5E3F2` | Hero eyebrow, New badge fill, subtle fills |
+| `accentTint` | `#E1F2F8` | Tonal secondary-button fill and selected-nav pill (MacJack's light-lavender fill, in Tendo blue). `accentDeep` on it: 6.1:1 |
 | `onAccent` | `#FFFFFF` | Text/CTA on accent surfaces |
 
 **Hero gradient:** `accentDeep → accent` at 150°.

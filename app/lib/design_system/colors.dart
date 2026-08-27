@@ -25,6 +25,11 @@ abstract final class AppColors {
   static const accentSoft = Color(0xFFB5E3F2);
   static const onAccent = Color(0xFFFFFFFF);
 
+  /// Tonal fill for secondary (MacJack-style) buttons and selected states —
+  /// the Tendo-blue equivalent of MacJack's light-lavender button fill.
+  /// [accentDeep] text on it measures 6.1:1 (AA at any size).
+  static const accentTint = Color(0xFFE1F2F8);
+
   // Signals
   static const warning = Color(0xFFB45309); // skipped-exercise indicator
   static const danger = Color(0xFFB3261E); // inactive-patient warning

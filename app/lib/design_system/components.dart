@@ -18,24 +18,17 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // surface and bg are near-identical in luminance; a soft warm shadow is
-    // what makes rows read as tappable cards rather than ruled regions.
+    // MacJack cards are borderless: one soft ink shadow does all the lifting
+    // against the near-white bg.
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadii.card),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.text.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppShadows.card,
       ),
       child: Material(
         color: color ?? AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.card),
-          side: const BorderSide(color: AppColors.border),
         ),
         child: InkWell(
           onTap: onTap,
@@ -59,7 +52,9 @@ class PrimaryButton extends StatelessWidget {
     required this.label,
     this.onPressed,
     this.expanded = true,
-    this.background = AppColors.accent,
+    // accentDeep, not accent — white label on accent is 3.6:1 (fails AA);
+    // Colors.md rule 4 reserves brand blue for fills without text.
+    this.background = AppColors.accentDeep,
     this.foreground = AppColors.onAccent,
   });
 
@@ -72,8 +67,8 @@ class PrimaryButton extends StatelessWidget {
         foregroundColor: foreground,
         disabledBackgroundColor: background.withOpacity(0.4),
         disabledForegroundColor: foreground.withOpacity(0.8),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.button)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+        shape: const StadiumBorder(),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
       child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -91,13 +86,16 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final button = OutlinedButton(
+    // MacJack secondary: a flat tonal pill (light brand tint, no border).
+    final button = FilledButton(
       onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.accentTint,
         foregroundColor: AppColors.accentDeep,
-        side: const BorderSide(color: AppColors.accent),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.button)),
+        disabledBackgroundColor: AppColors.accentTint.withOpacity(0.5),
+        disabledForegroundColor: AppColors.accentDeep.withOpacity(0.6),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+        shape: const StadiumBorder(),
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
       child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -127,7 +125,7 @@ class DosagePill extends StatelessWidget {
     return Material(
       color: overridden ? AppColors.surface : AppColors.bg,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.chip),
+        borderRadius: BorderRadius.circular(AppRadii.tile),
         side: BorderSide(
           color: overridden ? AppColors.accent : AppColors.border,
           width: overridden ? 1.4 : 1,
@@ -135,7 +133,7 @@ class DosagePill extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.chip),
+        borderRadius: BorderRadius.circular(AppRadii.tile),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Column(
@@ -208,7 +206,7 @@ class StatusChip extends StatelessWidget {
       ChipVariant.danger => (AppColors.dangerSoft, AppColors.danger),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(AppRadii.chip),
@@ -351,7 +349,7 @@ class VideoThumb extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
             begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors),
-        borderRadius: BorderRadius.circular(AppRadii.chip),
+        borderRadius: BorderRadius.circular(AppRadii.tile),
       ),
       child: playIcon
           ? Icon(Icons.play_arrow_rounded,
