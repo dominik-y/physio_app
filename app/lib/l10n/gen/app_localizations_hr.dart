@@ -517,6 +517,17 @@ class AppLocalizationsHr extends AppLocalizations {
   String get videoTooLong => 'Demo ograničenje je 15 sekundi — odaberite kraći isječak.';
 
   @override
+  String videoTooLongLimit(int seconds) {
+    return 'Isječak može trajati najviše $seconds sekundi — odaberite kraći.';
+  }
+
+  @override
+  String get videoUnavailable => 'Video je trenutačno nedostupan.';
+
+  @override
+  String get attachClipFirst => 'Dodajte video da biste ga učitali.';
+
+  @override
   String videoReady(String duration) {
     return 'Video dodan · $duration';
   }

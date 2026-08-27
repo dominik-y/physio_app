@@ -48,6 +48,9 @@ dependencies:
   firebase_auth: 5.7.0
   cloud_firestore: 5.6.12
   firebase_storage: 12.4.10
+  video_compress: 3.1.4
+  wakelock_plus: ^1.4.0
+  cross_file: ^0.3.4+2
 
 dev_dependencies:
   flutter_test:

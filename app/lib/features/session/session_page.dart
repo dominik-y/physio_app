@@ -114,6 +114,7 @@ class _InProgressBody extends StatelessWidget {
                           bodyPart: item.bodyPart,
                           durationSec: item.durationSec,
                           videoId: item.videoId,
+                          mediaUrl: item.mediaUrl,
                           autoplay: true,
                           fill: true,
                         ),

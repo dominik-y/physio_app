@@ -8,6 +8,7 @@ import 'package:physio_app/app/session_scope.dart';
 import 'package:physio_app/data/demo_media_store.dart';
 import 'package:physio_app/data/demo_repositories.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/domain/repository_bundle.dart';
@@ -33,13 +34,18 @@ class PhysioApp extends StatefulWidget {
   /// shared UI. Null = demo mode.
   final AppSession? session;
 
+  /// Media behavior for the upload sheet: null = demo (simulated upload,
+  /// 15 s cap). The Firebase entrypoint passes a real uploader + 90 s cap.
+  final MediaConfig? mediaConfig;
+
   const PhysioApp(
       {super.key,
       this.store,
       this.repositories,
       this.prefs,
       this.initialRole,
-      this.session});
+      this.session,
+      this.mediaConfig});
 
   @override
   State<PhysioApp> createState() => _PhysioAppState();
@@ -82,6 +88,8 @@ class _PhysioAppState extends State<PhysioApp> {
             create: (_) => _repositories.assignments),
         RepositoryProvider<CompletionsRepository>(
             create: (_) => _repositories.completions),
+        RepositoryProvider<MediaConfig>(
+            create: (_) => widget.mediaConfig ?? const MediaConfig.demo()),
       ],
       child: MultiBlocProvider(
         providers: [

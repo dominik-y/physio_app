@@ -41,17 +41,22 @@ class RealVideoPlayer extends StatefulWidget {
 }
 
 class _RealVideoPlayerState extends State<RealVideoPlayer> {
-  late final VideoPlayerController _controller;
+  late VideoPlayerController _controller;
   bool _ready = false;
+  bool _failed = false;
   bool _completedFired = false;
 
   @override
   void initState() {
     super.initState();
-    // 'asset:' = bundled clip (seeded demo footage); blob/http = web pick;
-    // anything else is a device file path from the image picker. On web the
-    // video_player plugin has no asset source — assets are fetched over HTTP
-    // from the bundle's assets/ directory instead.
+    _init();
+  }
+
+  void _init() {
+    // 'asset:' = bundled clip (seeded demo footage); blob/http = web pick or
+    // Storage download URL; anything else is a device file path from the
+    // image picker. On web the video_player plugin has no asset source —
+    // assets are fetched over HTTP from the bundle's assets/ directory.
     final url = widget.url;
     _controller = url.startsWith('asset:')
         ? (kIsWeb
@@ -69,8 +74,23 @@ class _RealVideoPlayerState extends State<RealVideoPlayer> {
       if (!mounted) return;
       setState(() => _ready = true);
       if (widget.autoplay || widget.startPlaying) _controller.play();
+    }).catchError((Object _) {
+      // Dead URL / offline / revoked token: a labeled retry beats an
+      // eternal spinner (plan §3.7).
+      if (mounted) setState(() => _failed = true);
     });
     _controller.addListener(_onTick);
+  }
+
+  void _retry() {
+    _controller.removeListener(_onTick);
+    _controller.dispose();
+    setState(() {
+      _ready = false;
+      _failed = false;
+      _completedFired = false;
+    });
+    _init();
   }
 
   void _onTick() {
@@ -139,16 +159,18 @@ class _RealVideoPlayerState extends State<RealVideoPlayer> {
   Widget build(BuildContext context) {
     final stage = Container(
       color: AppColors.videoBg,
-      child: !_ready
-          ? const Center(
-              child: SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: AppColors.accentSoft),
-              ),
-            )
-          : Stack(
+      child: _failed
+          ? VideoUnavailableStage(onRetry: _retry)
+          : !_ready
+              ? const Center(
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.5, color: AppColors.accentSoft),
+                  ),
+                )
+              : Stack(
               fit: StackFit.expand,
               children: [
                 Center(
@@ -240,5 +262,46 @@ class _RealVideoPlayerState extends State<RealVideoPlayer> {
             ),
     );
     return widget.fill ? stage : AspectRatio(aspectRatio: 16 / 9, child: stage);
+  }
+}
+
+/// Dark-stage "video unavailable" notice: failed loads (with retry) and
+/// missing URLs (without). Shared by RealVideoPlayer and DemoVideoPlayer's
+/// session-mode fallback.
+class VideoUnavailableStage extends StatelessWidget {
+  final VoidCallback? onRetry;
+  const VideoUnavailableStage({super.key, this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.videocam_off_outlined,
+              size: 42, color: AppColors.onAccent.withOpacity(0.7)),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l.videoUnavailable,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: AppColors.onAccent.withOpacity(0.85),
+                fontWeight: FontWeight.w600),
+          ),
+          if (onRetry != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            OutlinedButton(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.onAccent,
+                side: BorderSide(color: AppColors.onAccent.withOpacity(0.6)),
+              ),
+              child: Text(l.retry),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

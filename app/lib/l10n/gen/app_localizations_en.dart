@@ -490,6 +490,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoTooLong => 'Demo limit is 15 seconds — pick a shorter clip.';
 
   @override
+  String videoTooLongLimit(int seconds) {
+    return 'Clips can be up to $seconds seconds — pick a shorter one.';
+  }
+
+  @override
+  String get videoUnavailable => 'Video is currently unavailable.';
+
+  @override
+  String get attachClipFirst => 'Attach a clip to upload.';
+
+  @override
   String videoReady(String duration) {
     return 'Video attached · $duration';
   }

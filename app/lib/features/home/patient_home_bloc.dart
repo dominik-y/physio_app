@@ -20,6 +20,7 @@ class SingleAssignmentRow extends Equatable {
   final String bodyPart;
   final int durationSec;
   final bool seen;
+  final String? mediaUrl;
 
   const SingleAssignmentRow({
     required this.assignmentId,
@@ -28,10 +29,12 @@ class SingleAssignmentRow extends Equatable {
     required this.bodyPart,
     required this.durationSec,
     required this.seen,
+    this.mediaUrl,
   });
 
   @override
-  List<Object?> get props => [assignmentId, videoId, title, bodyPart, durationSec, seen];
+  List<Object?> get props =>
+      [assignmentId, videoId, title, bodyPart, durationSec, seen, mediaUrl];
 }
 
 /// Remaining today's-session exercises for one body part (spec §5.1 — shown
@@ -187,6 +190,7 @@ class PatientHomeBloc extends Bloc<PatientHomeEvent, PatientHomeState> {
             bodyPart: it.bodyPart,
             durationSec: it.durationSec,
             seen: a.seenByPatient,
+            mediaUrl: it.mediaUrl,
           );
         })
         .toList();

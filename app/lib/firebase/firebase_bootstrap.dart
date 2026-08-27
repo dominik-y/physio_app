@@ -4,6 +4,7 @@ import 'package:physio_app/app/app.dart';
 import 'package:physio_app/app/locale_cubit.dart';
 import 'package:physio_app/app/session_scope.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repository_bundle.dart';
 import 'package:physio_app/firebase/auth_cubit.dart';
@@ -21,11 +22,16 @@ class TendoFirebaseApp extends StatefulWidget {
   final SharedPreferences prefs;
   final RepositoryBundle Function(AuthIdentity identity) bundleBuilder;
 
+  /// Real upload pipeline + 90 s clip cap; null (gate widget tests) keeps
+  /// the sheet in demo simulation.
+  final MediaConfig? mediaConfig;
+
   const TendoFirebaseApp({
     super.key,
     required this.service,
     required this.prefs,
     required this.bundleBuilder,
+    this.mediaConfig,
   });
 
   @override
@@ -68,6 +74,7 @@ class _TendoFirebaseAppState extends State<TendoFirebaseApp> {
               repositories: _bundleFor(identity),
               initialRole:
                   identity.isPhysio ? UserRole.physio : UserRole.patient,
+              mediaConfig: widget.mediaConfig,
               session: AppSession(
                 displayName: identity.displayName,
                 patientId: identity.patientId,

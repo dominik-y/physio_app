@@ -305,6 +305,16 @@
   "pickFromGallery": "From gallery",
   "filmWithCamera": "Film now",
   "videoTooLong": "Demo limit is 15 seconds — pick a shorter clip.",
+  "videoTooLongLimit": "Clips can be up to {seconds} seconds — pick a shorter one.",
+  "@videoTooLongLimit": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "videoUnavailable": "Video is currently unavailable.",
+  "attachClipFirst": "Attach a clip to upload.",
   "videoReady": "Video attached · {duration}",
   "@videoReady": {
     "placeholders": {

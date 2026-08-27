@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:physio_app/core/result.dart';
 import 'package:physio_app/core/streams.dart';
 import 'package:physio_app/data/firebase/mappers.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/domain/repository_bundle.dart';
@@ -205,12 +206,16 @@ class FirestoreLibraryRepository implements LibraryRepository {
     required String bodyPart,
     required int durationSec,
     String? privateToPatientId,
+    MediaUploadResult? media,
   }) {
     if (title.trim().isEmpty) {
       return Future.value(const Err('Title is required'));
     }
     return _guard(() async {
-      final ref = db.collection('videos').doc();
+      // Upload-first: [media] already sits in Storage, so the doc is born
+      // 'ready' with its id matching the Storage folder — no intermediate
+      // 'uploading' doc can be orphaned by a killed app.
+      final ref = db.collection('videos').doc(media?.videoId);
       final video = VideoItem(
         id: ref.id,
         title: title.trim(),
@@ -219,6 +224,9 @@ class FirestoreLibraryRepository implements LibraryRepository {
         visibility: privateToPatientId == null ? 'library' : 'private',
         privateToPatientId: privateToPatientId,
         createdAt: DateTime.now(),
+        mediaUrl: media?.mediaUrl,
+        posterUrl: media?.posterUrl,
+        storagePath: media?.storagePath,
       );
       await ref.set(videoToMap(video));
       return video;

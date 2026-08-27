@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:physio_app/app/session_scope.dart';
 import 'package:physio_app/data/demo_media_store.dart';
 import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/fullscreen_video_page.dart';
@@ -22,6 +23,12 @@ class DemoVideoPlayer extends StatefulWidget {
   /// Library video id; used to look up locally imported clips.
   final String? videoId;
 
+  /// Real playback URL (Firebase flavor: Storage download URL snapshotted
+  /// on the video doc / assignment item). Wins over the DemoMediaStore
+  /// lookup; when both are null in a signed-in session the player shows
+  /// "video unavailable" instead of the demo placeholder.
+  final String? mediaUrl;
+
   /// When true the player expands to fill its parent (session player, where
   /// the video is the dominant object) instead of locking to 16:9.
   final bool fill;
@@ -37,6 +44,7 @@ class DemoVideoPlayer extends StatefulWidget {
     required this.bodyPart,
     required this.durationSec,
     this.videoId,
+    this.mediaUrl,
     this.autoplay = false,
     this.fill = false,
     this.onCompleted,
@@ -115,7 +123,8 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer>
 
   @override
   Widget build(BuildContext context) {
-    final mediaUrl = DemoMediaStore.instance.urlFor(widget.videoId);
+    final mediaUrl =
+        widget.mediaUrl ?? DemoMediaStore.instance.urlFor(widget.videoId);
     if (mediaUrl != null) {
       return RealVideoPlayer(
         url: mediaUrl,
@@ -123,6 +132,17 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer>
         fill: widget.fill,
         onCompleted: widget.onCompleted,
       );
+    }
+    // Signed-in session with no URL: the animated demo placeholder would
+    // fake playback of a real product — show the honest state instead.
+    if (SessionScope.maybeOf(context) != null) {
+      final stage = Container(
+        color: AppColors.videoBg,
+        child: const VideoUnavailableStage(),
+      );
+      return widget.fill
+          ? stage
+          : AspectRatio(aspectRatio: 16 / 9, child: stage);
     }
     final player = Container(
       decoration: const BoxDecoration(color: AppColors.videoBg),

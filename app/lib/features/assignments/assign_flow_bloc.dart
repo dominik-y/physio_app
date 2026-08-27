@@ -283,7 +283,14 @@ class AssignFlowBloc extends Bloc<AssignFlowEvent, AssignFlowState> {
       patientsRepository.watchPatient(patientId),
       assignmentsRepository.watchForPatient(patientId),
       (List<ProtocolTemplate> templates, List<VideoItem> videos, Patient? patient, List<Assignment> assignments) {
-        final visible = videos.where((v) => v.visibility == 'library' || v.privateToPatientId == patientId).toList();
+        // isReady: a non-ready video has no mediaUrl yet — offering it would
+        // snapshot a null URL into the assignment forever (plan §3.7). Demo
+        // videos are always 'ready'.
+        final visible = videos
+            .where((v) =>
+                (v.visibility == 'library' || v.privateToPatientId == patientId) &&
+                v.isReady)
+            .toList();
         final total = assignments
             .where((a) => a.active && a.type == AssignmentType.protocol)
             .fold<int>(0, (sum, a) => sum + a.items.length);
@@ -326,6 +333,9 @@ class AssignFlowBloc extends Bloc<AssignFlowEvent, AssignFlowState> {
         title: video.title,
         durationSec: video.durationSec,
         bodyPart: video.bodyPart,
+        // Patients never read `videos` — the snapshot is their only URL.
+        mediaUrl: video.mediaUrl,
+        posterUrl: video.posterUrl,
       );
 
   void _onStartedFromTemplate(StartedFromTemplate event, Emitter<AssignFlowState> emit) {
@@ -346,6 +356,8 @@ class AssignFlowBloc extends Bloc<AssignFlowEvent, AssignFlowState> {
         title: video?.title ?? templateItem.videoId,
         durationSec: video?.durationSec ?? 0,
         bodyPart: video?.bodyPart ?? '',
+        mediaUrl: video?.mediaUrl,
+        posterUrl: video?.posterUrl,
       ));
       defaults[templateItem.videoId] = templateItem;
     }

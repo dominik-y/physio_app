@@ -156,6 +156,7 @@ class _SingleRow extends StatelessWidget {
                 bodyPart: row.bodyPart,
                 durationSec: row.durationSec,
                 videoId: row.videoId,
+                mediaUrl: row.mediaUrl,
               ),
             ),
           );
@@ -211,6 +212,7 @@ class _ExerciseRow extends StatelessWidget {
               bodyPart: item.bodyPart,
               durationSec: item.durationSec,
               videoId: item.videoId,
+              mediaUrl: item.mediaUrl,
             ),
           ),
         ),

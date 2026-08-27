@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 
@@ -32,20 +34,25 @@ class UploadFailed extends UploadState {
   const UploadFailed(this.message);
 }
 
-/// Simulates client-side compression + upload (spec §6.4/§9): compression
-/// ramps 0→1 over ~12 ticks, then upload ramps 0→1 over ~8 ticks, then the
-/// video is added to the clinic library. [stepDelay] paces each tick; tests
-/// pass [Duration.zero] to run the whole sequence instantly.
+/// Drives the compress→upload→add-to-library sequence. With no [uploader]
+/// (demo mode, the pitch build) the stages are simulated: compression ramps
+/// 0→1 over ~12 ticks, upload over ~8, then the video is added — behavior
+/// unchanged, including the "!"-title failure trigger. With an [uploader]
+/// (Firebase flavor) the real pipeline runs and its progress drives the same
+/// states. [stepDelay] paces simulation ticks; tests pass [Duration.zero].
 class UploadCubit extends Cubit<UploadState> {
   final LibraryRepository repository;
+  final MediaUploader? uploader;
   final Duration stepDelay;
 
   String? _title;
   String? _bodyPart;
   int? _durationSec;
   String? _privateToPatientId;
+  XFile? _file;
 
-  UploadCubit(this.repository, {this.stepDelay = const Duration(milliseconds: 60)})
+  UploadCubit(this.repository,
+      {this.uploader, this.stepDelay = const Duration(milliseconds: 60)})
       : super(const UploadIdle());
 
   Future<void> start({
@@ -53,11 +60,13 @@ class UploadCubit extends Cubit<UploadState> {
     required String bodyPart,
     required int durationSec,
     String? privateToPatientId,
+    XFile? file,
   }) {
     _title = title;
     _bodyPart = bodyPart;
     _durationSec = durationSec;
     _privateToPatientId = privateToPatientId;
+    _file = file;
     return _run();
   }
 
@@ -71,7 +80,50 @@ class UploadCubit extends Cubit<UploadState> {
   static const _compressTicks = 12;
   static const _uploadTicks = 8;
 
-  Future<void> _run() async {
+  Future<void> _run() =>
+      uploader == null ? _runSimulated() : _runReal(uploader!);
+
+  Future<void> _runReal(MediaUploader uploader) async {
+    final file = _file;
+    if (file == null) {
+      // The sheet disables submit until a clip is attached — reaching here
+      // without one is a wiring bug, surfaced instead of silently ignored.
+      emit(const UploadFailed('Najprije odaberite ili snimite video.'));
+      return;
+    }
+    try {
+      final media = await uploader.upload(
+        file: file,
+        onCompress: (p) {
+          if (!isClosed) emit(UploadCompressing(p));
+        },
+        onUpload: (p) {
+          if (!isClosed) emit(UploadUploading(p));
+        },
+      );
+      if (isClosed) return;
+      final result = await repository.addVideo(
+        title: _title!,
+        bodyPart: _bodyPart!,
+        durationSec: _durationSec!,
+        privateToPatientId: _privateToPatientId,
+        media: media,
+      );
+      if (isClosed) return;
+      result.when(
+        ok: (video) => emit(UploadDone(video)),
+        err: (message) => emit(UploadFailed(message)),
+      );
+    } on MediaUploadException catch (e) {
+      if (isClosed) return;
+      emit(UploadFailed(e.message));
+    } catch (e) {
+      if (isClosed) return;
+      emit(UploadFailed('$e'));
+    }
+  }
+
+  Future<void> _runSimulated() async {
     for (var i = 1; i <= _compressTicks; i++) {
       if (isClosed) return;
       emit(UploadCompressing(i / _compressTicks));

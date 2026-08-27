@@ -2,6 +2,7 @@ import 'package:physio_app/core/dates.dart';
 import 'package:physio_app/core/result.dart';
 import 'package:physio_app/core/watchable.dart';
 import 'package:physio_app/data/demo_data.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/domain/repository_bundle.dart';
@@ -120,6 +121,7 @@ class DemoLibraryRepository implements LibraryRepository {
     required String bodyPart,
     required int durationSec,
     String? privateToPatientId,
+    MediaUploadResult? media, // demo playback goes through DemoMediaStore
   }) async {
     if (title.trim().isEmpty) return const Err('Title is required');
     final video = VideoItem(

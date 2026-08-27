@@ -905,6 +905,24 @@ abstract class AppLocalizations {
   /// **'Demo limit is 15 seconds — pick a shorter clip.'**
   String get videoTooLong;
 
+  /// No description provided for @videoTooLongLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Clips can be up to {seconds} seconds — pick a shorter one.'**
+  String videoTooLongLimit(int seconds);
+
+  /// No description provided for @videoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Video is currently unavailable.'**
+  String get videoUnavailable;
+
+  /// No description provided for @attachClipFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a clip to upload.'**
+  String get attachClipFirst;
+
   /// No description provided for @videoReady.
   ///
   /// In en, this message translates to:

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:physio_app/core/dates.dart';
 import 'package:physio_app/data/demo_data.dart';
 import 'package:physio_app/data/demo_repositories.dart';
+import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/features/assignments/assign_flow_bloc.dart';
 
 /// Matches the app-wide demo "now" (a Tuesday, per test/widget/harness.dart).
@@ -25,6 +26,66 @@ AssignFlowBloc _buildBloc(DemoStore store, String patientId, {IdFn? idFn}) => As
 
 void main() {
   group('AssignFlowBloc', () {
+    blocTest<AssignFlowBloc, AssignFlowState>(
+      'non-ready videos are filtered out of the picker (their mediaUrl '
+      'would snapshot as null forever)',
+      build: () {
+        final store = DemoStore.seed(now: () => _testNow);
+        store.videos.update((list) => [
+              ...list,
+              VideoItem(
+                id: 'v-still-uploading',
+                title: 'Half-uploaded clip',
+                bodyPart: 'Knee',
+                durationSec: 60,
+                createdAt: _testNow,
+                status: 'uploading',
+              ),
+            ]);
+        return _buildBloc(store, DemoData.adherentPatientId);
+      },
+      act: (_) => _settle(),
+      verify: (bloc) {
+        expect(bloc.state.videos, isNotEmpty);
+        expect(bloc.state.videos.any((v) => v.id == 'v-still-uploading'),
+            isFalse);
+      },
+    );
+
+    blocTest<AssignFlowBloc, AssignFlowState>(
+      'assignment items snapshot the video mediaUrl for patient playback',
+      build: () {
+        final store = DemoStore.seed(now: () => _testNow);
+        store.videos.update((list) => [
+              ...list,
+              VideoItem(
+                id: 'v-with-media',
+                title: 'Storage-backed clip',
+                bodyPart: 'Knee',
+                durationSec: 60,
+                createdAt: _testNow,
+                mediaUrl: 'https://storage.example/v.mp4',
+                posterUrl: 'https://storage.example/p.jpg',
+              ),
+            ]);
+        return _buildBloc(store, DemoData.adherentPatientId);
+      },
+      act: (bloc) async {
+        await _settle();
+        bloc.add(const StartedSingle());
+        await _settle();
+        bloc.add(const PickerSelectionToggled('v-with-media'));
+        bloc.add(const PickerConfirmed());
+        await _settle();
+      },
+      verify: (bloc) {
+        final item =
+            bloc.state.items.firstWhere((i) => i.videoId == 'v-with-media');
+        expect(item.mediaUrl, 'https://storage.example/v.mp4');
+        expect(item.posterUrl, 'https://storage.example/p.jpg');
+      },
+    );
+
     blocTest<AssignFlowBloc, AssignFlowState>(
       'StartedFromTemplate snapshots items — editing dosage never mutates the template',
       build: () => _buildBloc(DemoStore.seed(now: () => _testNow), DemoData.adherentPatientId),

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:physio_app/data/demo_media_store.dart';
 import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/features/library/upload_cubit.dart';
@@ -28,6 +29,7 @@ const _durationStepSec = 15;
 /// pins the new clip to the patient already being assigned.
 Future<void> showUploadSheet(BuildContext context, {String? preselectPrivatePatientId}) {
   final libraryRepository = context.read<LibraryRepository>();
+  final mediaConfig = context.read<MediaConfig>();
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -39,15 +41,20 @@ Future<void> showUploadSheet(BuildContext context, {String? preselectPrivatePati
     // stays a descendant of the app-wide RepositoryProviders — PatientsRepository
     // is read directly by the content widget below.
     builder: (sheetContext) => BlocProvider(
-      create: (_) => UploadCubit(libraryRepository),
-      child: _UploadSheetContent(preselectPrivatePatientId: preselectPrivatePatientId),
+      create: (_) =>
+          UploadCubit(libraryRepository, uploader: mediaConfig.uploader),
+      child: _UploadSheetContent(
+          preselectPrivatePatientId: preselectPrivatePatientId,
+          mediaConfig: mediaConfig),
     ),
   );
 }
 
 class _UploadSheetContent extends StatefulWidget {
   final String? preselectPrivatePatientId;
-  const _UploadSheetContent({this.preselectPrivatePatientId});
+  final MediaConfig mediaConfig;
+  const _UploadSheetContent(
+      {this.preselectPrivatePatientId, required this.mediaConfig});
 
   @override
   State<_UploadSheetContent> createState() => _UploadSheetContentState();
@@ -59,12 +66,16 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
   int _durationSec = 60;
   String? _privatePatientId;
 
-  // Locally picked clip (demo import): URL usable by the player and its
-  // probed duration. Null until a video is attached.
+  // Picked clip: the XFile (real uploads), a URL usable by the player
+  // (demo import), and its probed duration. Null until a video is attached.
+  XFile? _pickedFile;
   String? _pickedUrl;
   int? _pickedDurationSec;
   bool _probing = false;
   bool _pickTooLong = false;
+
+  bool get _isRealUpload => widget.mediaConfig.uploader != null;
+  int get _importMaxSec => widget.mediaConfig.importMaxSec;
 
   @override
   void initState() {
@@ -82,7 +93,7 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
   Future<void> _pickVideo(ImageSource source) async {
     final xfile = await ImagePicker().pickVideo(
       source: source,
-      maxDuration: const Duration(seconds: demoImportMaxSec),
+      maxDuration: Duration(seconds: _importMaxSec),
     );
     if (xfile == null || !mounted) return;
     setState(() {
@@ -95,11 +106,13 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
     setState(() {
       _probing = false;
       // Cameras respect maxDuration; gallery picks may not — enforce here.
-      if (probed != null && probed > demoImportMaxSec + 1) {
+      if (probed != null && probed > _importMaxSec + 1) {
         _pickTooLong = true;
+        _pickedFile = null;
         _pickedUrl = null;
         _pickedDurationSec = null;
       } else {
+        _pickedFile = xfile;
         _pickedUrl = url;
         _pickedDurationSec = probed;
         if (probed != null && probed > 0) _durationSec = probed;
@@ -128,6 +141,7 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
           bodyPart: _bodyPart,
           durationSec: _durationSec,
           privateToPatientId: _privatePatientId,
+          file: _pickedFile,
         );
   }
 
@@ -136,10 +150,13 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
     return BlocConsumer<UploadCubit, UploadState>(
       listener: (context, state) {
         if (state is UploadDone) {
-          // Attach the locally picked clip to the freshly created library
-          // entry so it plays for real everywhere in the demo.
+          // Demo only: attach the locally picked clip to the freshly created
+          // library entry so it plays for real everywhere in the demo. Real
+          // uploads carry their Storage URL on the doc itself.
           final url = _pickedUrl;
-          if (url != null) DemoMediaStore.instance.register(state.video.id, url);
+          if (!_isRealUpload && url != null) {
+            DemoMediaStore.instance.register(state.video.id, url);
+          }
           Future<void>.delayed(const Duration(milliseconds: 500), () {
             if (context.mounted && Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -186,6 +203,9 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
         pickedDurationSec: _pickedUrl == null ? null : _pickedDurationSec,
         probing: _probing,
         tooLong: _pickTooLong,
+        tooLongMessage: _isRealUpload
+            ? l.videoTooLongLimit(_importMaxSec)
+            : l.videoTooLong,
         onPickGallery: () => _pickVideo(ImageSource.gallery),
         onPickCamera: kIsWeb ? null : () => _pickVideo(ImageSource.camera),
       ),
@@ -268,8 +288,18 @@ class _UploadSheetContentState extends State<_UploadSheetContent> {
       const SizedBox(height: AppSpacing.lg),
       PrimaryButton(
         label: l.compressAndUpload,
-        onPressed: _titleController.text.trim().isEmpty ? null : _submit,
+        // A real upload has nothing to send without a clip; demo entries may
+        // stay title-only (placeholder playback).
+        onPressed: _titleController.text.trim().isEmpty ||
+                (_isRealUpload && _pickedFile == null)
+            ? null
+            : _submit,
       ),
+      if (_isRealUpload && _pickedFile == null) ...[
+        const SizedBox(height: AppSpacing.xs),
+        Text(l.attachClipFirst,
+            style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+      ],
     ];
   }
 
@@ -319,6 +349,7 @@ class _VideoPickTile extends StatelessWidget {
   final int? pickedDurationSec;
   final bool probing;
   final bool tooLong;
+  final String tooLongMessage;
   final VoidCallback onPickGallery;
   final VoidCallback? onPickCamera;
 
@@ -326,6 +357,7 @@ class _VideoPickTile extends StatelessWidget {
     required this.pickedDurationSec,
     required this.probing,
     required this.tooLong,
+    required this.tooLongMessage,
     required this.onPickGallery,
     this.onPickCamera,
   });
@@ -380,7 +412,7 @@ class _VideoPickTile extends StatelessWidget {
                 ),
                 if (tooLong) ...[
                   const SizedBox(height: AppSpacing.xs),
-                  Text(l.videoTooLong,
+                  Text(tooLongMessage,
                       style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.danger,

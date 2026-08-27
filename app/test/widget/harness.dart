@@ -5,6 +5,7 @@ import 'package:physio_app/app/locale_cubit.dart';
 import 'package:physio_app/app/role_cubit.dart';
 import 'package:physio_app/data/demo_repositories.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/l10n/gen/app_localizations.dart';
@@ -48,6 +49,7 @@ Future<void> pumpScreen(
         RepositoryProvider<TemplatesRepository>(create: (_) => DemoTemplatesRepository(s)),
         RepositoryProvider<AssignmentsRepository>(create: (_) => DemoAssignmentsRepository(s)),
         RepositoryProvider<CompletionsRepository>(create: (_) => DemoCompletionsRepository(s)),
+        RepositoryProvider<MediaConfig>(create: (_) => const MediaConfig.demo()),
       ],
       child: MultiBlocProvider(
         providers: [

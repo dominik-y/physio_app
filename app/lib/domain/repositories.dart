@@ -1,4 +1,5 @@
 import 'package:physio_app/core/result.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/domain/models.dart';
 
 abstract class PatientsRepository {
@@ -17,11 +18,16 @@ abstract class PatientsRepository {
 
 abstract class LibraryRepository {
   Stream<List<VideoItem>> watchVideos();
+
+  /// [media] is the finished Storage upload (Firebase flavor, upload-first:
+  /// the doc is only created once its media exists, so status is 'ready' on
+  /// create and no doc can ever reference a missing file). Demo ignores it.
   Future<Result<VideoItem>> addVideo({
     required String title,
     required String bodyPart,
     required int durationSec,
     String? privateToPatientId,
+    MediaUploadResult? media,
   });
 }
 

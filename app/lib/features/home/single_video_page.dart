@@ -12,6 +12,7 @@ class SingleVideoPage extends StatelessWidget {
   final String bodyPart;
   final int durationSec;
   final String? videoId;
+  final String? mediaUrl;
 
   const SingleVideoPage({
     super.key,
@@ -19,6 +20,7 @@ class SingleVideoPage extends StatelessWidget {
     required this.bodyPart,
     required this.durationSec,
     this.videoId,
+    this.mediaUrl,
   });
 
   @override
@@ -45,6 +47,7 @@ class SingleVideoPage extends StatelessWidget {
               bodyPart: bodyPart,
               durationSec: durationSec,
               videoId: videoId,
+              mediaUrl: mediaUrl,
               autoplay: true,
             ),
             Padding(

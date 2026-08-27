@@ -75,6 +75,7 @@ class _LibraryRow extends StatelessWidget {
             bodyPart: video.bodyPart,
             durationSec: video.durationSec,
             videoId: video.id,
+            mediaUrl: video.mediaUrl,
           ),
         ),
       ),
