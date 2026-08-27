@@ -51,6 +51,12 @@ Starts only after the director says **yes**. Promise: 2 weeks full-time, TestFli
 > ✅ Gate UX fixes from owner's device testing: client-side email-format validation (no account-existence disclosure — enumeration), **15 s command timeouts** (30 s redemption; unreachable backend answered in ~30+ s OS-timeout before), spinner inside the busy submit button, fixed-height error slot (killed the ~10 px layout jump on every attempt). Tests **178/178**.
 > 🔧 Device-vs-emulator lessons: emulators must bind `0.0.0.0` (firebase.json hosts) + same Wi-Fi (mobile data can't route to a LAN IP; company Wi-Fi may isolate clients — hotspot works: Mac joins phone's hotspot, EMULATOR_HOST=Mac's hotspot IP); `NSLocalNetworkUsageDescription` added to Info.plist; iOS Local Network permission required.
 
+> **2026-08-27 — forgot-password + invite-flow browser audit (Playwright vs :7358) + fixes:**
+> ✅ 17-check sweep of both flows. Solid: anti-enumeration "sent" message for unknown emails, all invite validation, **orphan cleanup after a bad code** (created account really deleted), sloppy-code normalization, idempotent re-redemption, dead-code rejection, `emailInUseWrongPassword`, full OOB reset loop (`accounts:resetPassword`).
+> 🐛 Fixed: (1) forgot-password skipped the email-shape check → typo'd address got "link sent" (backend swallows user-not-found by design, so the client must catch shape errors); (2) no busy-guard on forgot-password → double-tap sent **2** reset emails (proved via emulator oobCodes; now `_resetBusy` locks all gate buttons, spinner stays on sign-in only); (3) invite weak password now stops client-side (<6 chars, mirrors Firebase minimum); (4) `fieldRequired` copy "Obavezno"→"Ispunite sva polja.". Tests **181/181**, analyze clean, auth-smoke 8/8.
+> 🔑 Dev credentials aligned to owner's request: emulator password now **`tendo1`** for tomislav + ana (Firebase hard-rejects 5-char "tendo"); seeder + both smokes updated.
+> 🔧 Lesson: rebuilt web on :7358 is masked by Flutter's **service worker** — unregister + clear caches (or hard-reload) before re-testing, or you're testing the old build.
+
 ---
 
 ## 1. Architecture in five lines
