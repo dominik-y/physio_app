@@ -2,9 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:physio_app/data/firebase/firebase_media_uploader.dart';
 import 'package:physio_app/data/firebase/firestore_repositories.dart';
+import 'package:physio_app/domain/media_uploader.dart';
 import 'package:physio_app/firebase/emulator_options.dart';
 import 'package:physio_app/firebase/firebase_auth_service.dart';
 import 'package:physio_app/firebase/firebase_bootstrap.dart';
@@ -33,6 +36,15 @@ Future<void> main() async {
   if (useEmulator) {
     const host =
         String.fromEnvironment('EMULATOR_HOST', defaultValue: 'localhost');
+    if (kIsWeb) {
+      // Web reload race (emulator-only): the JS SDK starts restoring a
+      // persisted session against production endpoints before
+      // connectAuthEmulator applies, after which every auth call bypasses
+      // the emulator and 400s on the fake API key. Memory-only persistence
+      // keeps IndexedDB empty so nothing races — a reload just means
+      // signing in again. Production config keeps LOCAL persistence.
+      await FirebaseAuth.instance.setPersistence(Persistence.NONE);
+    }
     await FirebaseAuth.instance.useAuthEmulator(host, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
     await FirebaseStorage.instance.useStorageEmulator(host, 9199);
@@ -63,5 +75,7 @@ Future<void> main() async {
       FirebaseFirestore.instance,
       forPhysio: identity.isPhysio,
     ),
+    mediaConfig: MediaConfig.real(
+        uploader: FirebaseMediaUploader(FirebaseStorage.instance)),
   ));
 }

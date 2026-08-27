@@ -51,5 +51,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Development builds connect to the Firebase emulator suite running on the developer machine on this network.</string>
 </dict>
 </plist>
