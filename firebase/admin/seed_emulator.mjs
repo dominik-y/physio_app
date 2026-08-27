@@ -17,7 +17,7 @@ const iso = (d) => d.getDay() === 0 ? 7 : d.getDay() // ISO 1=Mon..7=Sun
 // ---- Auth users -----------------------------------------------------------
 const PHYSIO_UID = 'uid-physio-tomislav'
 const ANA_UID = 'uid-ana'
-const PASSWORD = 'tendo-dev-1'
+const PASSWORD = 'tendo1'
 
 async function ensureUser(opts) {
   await auth.deleteUser(opts.uid).catch(() => {})

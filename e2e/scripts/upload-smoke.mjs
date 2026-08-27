@@ -108,7 +108,7 @@ await page.locator('flt-semantics').first().waitFor({ state: 'attached', timeout
 await page.waitForTimeout(1500)
 
 // ---- 1. physio signs in, opens the upload sheet
-await signIn(page, 'tomislav@tendo.hr', 'tendo-dev-1')
+await signIn(page, 'tomislav@tendo.hr', 'tendo1')
 check(await hasLabel(page, 'Ana Kovačević'), 'physio lands on patients list')
 await tapLabel(page, 'Videoteka')
 await page.waitForTimeout(1500)
@@ -195,7 +195,7 @@ await page.locator('flt-semantics').first().waitFor({ state: 'attached', timeout
 await page.waitForTimeout(3500)
 await shot(page, 'up-5b-after-reload')
 if (!(await hasLabel(page, 'Prijava', 4000))) await signOut(page)
-await signIn(page, 'ana@example.com', 'tendo-dev-1')
+await signIn(page, 'ana@example.com', 'tendo1')
 check(await hasLabel(page, TITLE), "new video shows on Ana's home")
 await shot(page, 'up-6-ana-home')
 await tapLabel(page, TITLE)
