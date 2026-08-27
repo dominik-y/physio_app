@@ -21,6 +21,18 @@ Starts only after the director says **yes**. Promise: 2 weeks full-time, TestFli
 > ✅ Date-parameterized emulator seeder (`npm run seed`) — 5 patients in named states, videos/templates/assignments, 3 weeks of completions
 > ✅ **End-to-end smoke PASSED**: Firebase flavor on iOS simulator boots; web flavor driven by Playwright shows the seeded caseload, Ana's detail with adherence %, private video, and notes — all streaming live from the Firestore emulator, zero console errors
 > Next buildable without money: real auth gate UI (login / invite redemption / password reset / account deletion, Croatian), upload pipeline vs Storage emulator, integration_test suite. Needs money/accounts: real project (day-1 wizard), TestFlight.
+>
+> **Progress 2026-08-27 (day-5 work done pre-signature, still €0):**
+> ✅ **Real auth gate shipped** — DEV_LOGIN is now an opt-in shortcut, the gate is the default: Croatian Prijava (email/lozinka, Zaboravljena lozinka?), "Imam pozivni kod" redemption (create-account → rules-validated 2-doc batch; email-already-in-use falls back to sign-in; orphan Auth user deleted on bad code), notLinked recovery screen, offline-first cached identity (shared_preferences, background refresh), sign-out + patient-only "Izbriši račun" (reauth + delete, App Store 5.1.1(v)) in the avatar menu
+> ✅ Architecture: `AuthService` interface (pure Dart) / `FirebaseAuthService` impl / `AuthCubit` with stream suppression during redemption (the create-user auth event must not flash "notLinked"), `TendoFirebaseApp` bootstrap swaps gate ↔ `PhysioApp`; `SessionScope` seam threads patientId/displayName/sign-out into shared UI with demo behavior byte-identical (null session)
+> ✅ Tests: 154/154 flutter (11 cubit incl. race + offline cold start, 8 full-stack gate widget tests in Croatian, invite-code normalization), analyzer clean, 16/16 demo Playwright — pitch build untouched
+> ✅ **Live emulator smoke 8/8** (`e2e/scripts/auth-smoke.mjs`): physio login → caseload, sign-out, wrong password rejected in Croatian, Luka redeems LK7-3FQ9 (typed sloppy "lk7 3fq9" — normalization works) → lands on his home, **reused code rejected for a second account**, Luka re-login with his new password
+> Decisions taken by owner today: web upload YES, Crashlytics YES (§6 updated). Remaining €0 work: upload pipeline vs Storage emulator, integration_test suite, free-provisioning install on the iPhone (task #5).
+>
+> **2026-08-27 later — architect-critique pass (pre-commit) + iPhone install:**
+> ✅ Adversarial review of the auth gate found 4 MAJOR + 4 MINOR, all fixed same day: (1) cache-served empty patient query no longer reads as notLinked (only the SERVER may eject a cached identity — `metadata.isFromCache` → network), (2) stale in-flight resolutions are discarded (`_stale(uid)` guard: no emit, no cache repoison after account switch/sign-out), (3) auth events swallowed during redemption suppression are replayed (`_resyncWithAuth` — a network-dead link batch now lands on notLinked recovery, not a dead login form), (4) physio pages show `session.displayName`, not the hardcoded demo name; plus catch-all → retry screen instead of frozen splash, emit-after-close guards, cache cleared on externally-driven sign-out, gate re-reads locale after in-app toggle. 5 new regression tests → **159/159**, smoke re-run **8/8** post-fix.
+> ✅ **Task #5 done**: pitch demo build installed AND launched on Dominik's iPhone via free provisioning (personal team, no paid account). Signature expires ~Sept 3 — rebuild before the pitch if later.
+> ⚠️ Known deferred (review follow-ups, fine pre-signature): Firestore `clearPersistence()` on sign-out for shared clinic devices; delete-account dialog + ResolveErrorScreen widget tests.
 
 ---
 
@@ -108,10 +120,10 @@ video_compress: 3.1.4      # use VideoQuality.Res1280x720Quality — MediumQuali
 
 ## 6. Open decisions for Dominik (each has a recommendation)
 
-1. **Web upload for physios at launch?** → Recommend **yes, uncompressed with 100 MB pre-check** (desktop at the clinic is a plausible upload path; XFile seam makes it cheap). Alternative: mobile-only, say so in the UI.
+1. **Web upload for physios at launch?** → ✅ **DECIDED 2026-08-27 (owner): yes** — uncompressed with 100 MB pre-check.
 2. **`saveTemplate` semantics**: demo is append-only; Firestore `set`-by-id gains update. → Recommend **allow update** (what physios expect).
 3. **Clinical `notes` visibility**: under owner-readable patient docs, a technically savvy patient could read the physio's notes. → Recommend **move notes to a physio-only `patientNotes/{patientId}` doc** (small, decided before day-3 rules; avoids an awkward conversation later).
-4. **Crashlytics** (solo maintainer needs production visibility; works with Analytics off). → Recommend **yes, wired day 13**.
+4. **Crashlytics** → ✅ **DECIDED 2026-08-27 (owner): yes**, wired day 13.
 5. **Duration cap 90 s** (demo's 15 s was a memory constraint) + Storage backstop **100 MB** (matches the pitched cap — not 150). → Recommend confirm as stated.
 6. **Starter content**: pre-create the 3 demo protocol templates with real videos, or start empty. → Recommend **ask the clinic on day 12**.
 
