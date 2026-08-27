@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:physio_app/app/locale_cubit.dart';
 import 'package:physio_app/app/role_cubit.dart';
 import 'package:physio_app/app/router.dart';
+import 'package:physio_app/app/session_scope.dart';
 import 'package:physio_app/data/demo_media_store.dart';
 import 'package:physio_app/data/demo_repositories.dart';
 import 'package:physio_app/design_system/tokens.dart';
+import 'package:physio_app/domain/models.dart';
 import 'package:physio_app/domain/repositories.dart';
 import 'package:physio_app/domain/repository_bundle.dart';
 import 'package:physio_app/l10n/gen/app_localizations.dart';
@@ -24,7 +26,20 @@ class PhysioApp extends StatefulWidget {
   /// Locale persistence; null (tests) means the choice lives for the session.
   final SharedPreferences? prefs;
 
-  const PhysioApp({super.key, this.store, this.repositories, this.prefs});
+  /// Firebase flavor: the resolved role skips the demo role gate.
+  final UserRole? initialRole;
+
+  /// Firebase flavor: sign-out / delete-account / patient identity for the
+  /// shared UI. Null = demo mode.
+  final AppSession? session;
+
+  const PhysioApp(
+      {super.key,
+      this.store,
+      this.repositories,
+      this.prefs,
+      this.initialRole,
+      this.session});
 
   @override
   State<PhysioApp> createState() => _PhysioAppState();
@@ -41,7 +56,8 @@ class _PhysioAppState extends State<PhysioApp> {
     DemoMediaStore.instance
         .register('v-tendo-drill', 'asset:assets/videos/tendo_reel8.mp4');
   }
-  late final RoleCubit _roleCubit = RoleCubit();
+
+  late final RoleCubit _roleCubit = RoleCubit(widget.initialRole);
   late final LocaleCubit _localeCubit = LocaleCubit(prefs: widget.prefs);
   late final GoRouter _router = buildRouter(_roleCubit);
 
@@ -56,11 +72,16 @@ class _PhysioAppState extends State<PhysioApp> {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<PatientsRepository>(create: (_) => _repositories.patients),
-        RepositoryProvider<LibraryRepository>(create: (_) => _repositories.library),
-        RepositoryProvider<TemplatesRepository>(create: (_) => _repositories.templates),
-        RepositoryProvider<AssignmentsRepository>(create: (_) => _repositories.assignments),
-        RepositoryProvider<CompletionsRepository>(create: (_) => _repositories.completions),
+        RepositoryProvider<PatientsRepository>(
+            create: (_) => _repositories.patients),
+        RepositoryProvider<LibraryRepository>(
+            create: (_) => _repositories.library),
+        RepositoryProvider<TemplatesRepository>(
+            create: (_) => _repositories.templates),
+        RepositoryProvider<AssignmentsRepository>(
+            create: (_) => _repositories.assignments),
+        RepositoryProvider<CompletionsRepository>(
+            create: (_) => _repositories.completions),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -68,14 +89,18 @@ class _PhysioAppState extends State<PhysioApp> {
           BlocProvider.value(value: _localeCubit),
         ],
         child: BlocBuilder<LocaleCubit, Locale>(
-          builder: (context, locale) => MaterialApp.router(
-            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-            debugShowCheckedModeBanner: false,
-            theme: buildTheme(),
-            locale: locale,
-            supportedLocales: LocaleCubit.supported,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            routerConfig: _router,
+          builder: (context, locale) => SessionScope(
+            session: widget.session,
+            child: MaterialApp.router(
+              onGenerateTitle: (context) =>
+                  AppLocalizations.of(context).appTitle,
+              debugShowCheckedModeBanner: false,
+              theme: buildTheme(),
+              locale: locale,
+              supportedLocales: LocaleCubit.supported,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              routerConfig: _router,
+            ),
           ),
         ),
       ),

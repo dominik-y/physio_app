@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:physio_app/app/session_scope.dart';
 import 'package:physio_app/core/dates.dart';
 import 'package:physio_app/data/demo_data.dart';
 import 'package:physio_app/design_system/components.dart';
@@ -15,19 +16,22 @@ const _sessionBg = AppColors.videoBg;
 /// Full-screen guided session player (spec §5.2). Dark regardless of the
 /// app theme — the player is a focused, distraction-free space.
 class SessionPage extends StatelessWidget {
-  final String patientId;
+  /// Null resolves via SessionScope (Firebase flavor), falling back to the
+  /// demo fixture patient.
+  final String? patientId;
 
   /// Clock override so tests can pin "today" to the seeded fixture date.
   final NowFn? now;
 
-  const SessionPage(
-      {super.key, this.patientId = DemoData.currentPatientId, this.now});
+  const SessionPage({super.key, this.patientId, this.now});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => SessionBloc(
-        patientId: patientId,
+        patientId: patientId ??
+            SessionScope.maybeOf(context)?.patientId ??
+            DemoData.currentPatientId,
         assignmentsRepository: context.read<AssignmentsRepository>(),
         completionsRepository: context.read<CompletionsRepository>(),
         now: now ?? DateTime.now,

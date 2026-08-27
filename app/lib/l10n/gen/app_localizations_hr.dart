@@ -555,4 +555,103 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get exitFullscreenTooltip => 'Zatvori cijeli zaslon';
+
+  @override
+  String get signInTitle => 'Prijava';
+
+  @override
+  String get signInSubtitle => 'Vaš program vježbi, kod kuće';
+
+  @override
+  String get passwordLabel => 'Lozinka';
+
+  @override
+  String get signInButton => 'Prijavi se';
+
+  @override
+  String get forgotPassword => 'Zaboravljena lozinka?';
+
+  @override
+  String get resetEmailSent => 'Ako račun s tom e-adresom postoji, poveznica za promjenu lozinke je poslana.';
+
+  @override
+  String get resetEmailEnterFirst => 'Najprije upišite e-adresu iznad.';
+
+  @override
+  String get haveInviteCode => 'Imam pozivni kod';
+
+  @override
+  String get inviteTitle => 'Aktivirajte svoj program';
+
+  @override
+  String get inviteSubtitle => 'Upišite kod koji vam je dao fizioterapeut i odaberite lozinku.';
+
+  @override
+  String get inviteCodeLabel => 'Pozivni kod';
+
+  @override
+  String get confirmPasswordLabel => 'Potvrdite lozinku';
+
+  @override
+  String get createAccountButton => 'Aktiviraj';
+
+  @override
+  String get backToSignIn => 'Natrag na prijavu';
+
+  @override
+  String get passwordsDontMatch => 'Lozinke se ne podudaraju.';
+
+  @override
+  String get fieldRequired => 'Obavezno';
+
+  @override
+  String get signOutLabel => 'Odjava';
+
+  @override
+  String get deleteAccountLabel => 'Izbriši račun';
+
+  @override
+  String get deleteAccountTitle => 'Izbrisati račun?';
+
+  @override
+  String get deleteAccountBody => 'Ovime trajno gubite pristup. Za potvrdu upišite lozinku.';
+
+  @override
+  String get deleteAccountConfirm => 'Izbriši';
+
+  @override
+  String get resolvingIdentity => 'Prijava u tijeku…';
+
+  @override
+  String get notLinkedTitle => 'Još samo korak';
+
+  @override
+  String get notLinkedBody => 'Vaš račun još nije povezan s programom. Upišite pozivni kod za dovršetak.';
+
+  @override
+  String get retryButton => 'Pokušaj ponovno';
+
+  @override
+  String get errInvalidCredentials => 'Pogrešna e-adresa ili lozinka.';
+
+  @override
+  String get errEmailInUseWrongPassword => 'Ova e-adresa već ima račun, ali lozinka nije točna.';
+
+  @override
+  String get errInvalidInvite => 'Pozivni kod nije važeći. Provjerite ga sa svojim fizioterapeutom.';
+
+  @override
+  String get errWeakPassword => 'Lozinka je preslaba — upotrijebite barem 6 znakova.';
+
+  @override
+  String get errInvalidEmail => 'To ne izgleda kao e-adresa.';
+
+  @override
+  String get errNetwork => 'Nema veze s internetom. Provjerite vezu i pokušajte ponovno.';
+
+  @override
+  String get errRequiresRecentLogin => 'Prijavite se ponovno pa pokušajte opet.';
+
+  @override
+  String get errUnknown => 'Nešto je pošlo po zlu. Pokušajte ponovno.';
 }

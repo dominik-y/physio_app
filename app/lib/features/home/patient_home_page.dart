@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:physio_app/app/role_menu.dart';
+import 'package:physio_app/app/session_scope.dart';
 import 'package:physio_app/data/demo_data.dart';
 import 'package:physio_app/design_system/components.dart';
 import 'package:physio_app/design_system/hero_card.dart';
@@ -20,11 +21,13 @@ class PatientHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final session = SessionScope.maybeOf(context);
     return BlocProvider(
       create: (context) => PatientHomeBloc(
         assignmentsRepository: context.read<AssignmentsRepository>(),
         completionsRepository: context.read<CompletionsRepository>(),
         patientsRepository: context.read<PatientsRepository>(),
+        patientId: session?.patientId ?? DemoData.currentPatientId,
       ),
       child: const _PatientHomeView(),
     );
@@ -50,7 +53,8 @@ class _PatientHomeView extends StatelessWidget {
           builder: (context, state) {
             final l = AppLocalizations.of(context);
             final name = state.patientName.isEmpty
-                ? DemoData.currentPatientName
+                ? (SessionScope.maybeOf(context)?.displayName ??
+                    DemoData.currentPatientName)
                 : state.patientName;
             return ContentColumn(
                 child: ListView(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:physio_app/app/role_menu.dart';
+import 'package:physio_app/app/session_scope.dart';
 import 'package:physio_app/core/result.dart';
 import 'package:physio_app/data/demo_data.dart';
 import 'package:physio_app/design_system/components.dart';
@@ -38,7 +39,11 @@ class _PatientsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.patientsTitle),
-        actions: const [RoleMenuButton(name: DemoData.physioName)],
+        actions: [
+          RoleMenuButton(
+              name: SessionScope.maybeOf(context)?.displayName ??
+                  DemoData.physioName),
+        ],
       ),
       body: BlocBuilder<PatientsBloc, PatientsState>(
         builder: (context, state) {
@@ -58,7 +63,8 @@ class _PatientsView extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md, AppSpacing.md, AppSpacing.md, 96),
               itemCount: state.rows.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, i) =>
                   _DismissiblePatientCard(row: state.rows[i]),
             ),
@@ -122,7 +128,9 @@ class _PatientsView extends StatelessWidget {
     if (result == null) return;
     result.when(
       ok: (patient) => messenger.showSnackBar(
-        SnackBar(content: Text(l.inviteCodeFor(patient.name, patient.inviteCode ?? ''))),
+        SnackBar(
+            content:
+                Text(l.inviteCodeFor(patient.name, patient.inviteCode ?? ''))),
       ),
       err: (message) => messenger.showSnackBar(
         SnackBar(backgroundColor: AppColors.danger, content: Text(message)),
@@ -151,8 +159,8 @@ class _DismissiblePatientCard extends StatelessWidget {
           color: AppColors.danger,
           borderRadius: BorderRadius.circular(AppRadii.card),
         ),
-        child: const Icon(Icons.delete_outline_rounded,
-            color: AppColors.onAccent),
+        child:
+            const Icon(Icons.delete_outline_rounded, color: AppColors.onAccent),
       ),
       confirmDismiss: (_) => showDialog<bool>(
         context: context,
@@ -212,14 +220,17 @@ class _PatientCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   row.isSilent
-                      ? AppLocalizations.of(context).daysSilent(row.daysSilent ?? 0)
+                      ? AppLocalizations.of(context)
+                          .daysSilent(row.daysSilent ?? 0)
                       : '${_localizedBodyPart(context, patient.primaryBodyPart)} · ${_lastActiveLabel(context, row)}',
                   // The triage signal must survive 320px — wrap, don't cut.
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
-                    color: row.isSilent ? AppColors.danger : AppColors.textMuted,
-                    fontWeight: row.isSilent ? FontWeight.w600 : FontWeight.w400,
+                    color:
+                        row.isSilent ? AppColors.danger : AppColors.textMuted,
+                    fontWeight:
+                        row.isSilent ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
               ],

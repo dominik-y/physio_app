@@ -528,4 +528,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exitFullscreenTooltip => 'Exit fullscreen';
+
+  @override
+  String get signInTitle => 'Sign in';
+
+  @override
+  String get signInSubtitle => 'Your exercise program, at home';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get signInButton => 'Sign in';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get resetEmailSent => 'If an account exists for that email, a reset link is on its way.';
+
+  @override
+  String get resetEmailEnterFirst => 'Enter your email above first.';
+
+  @override
+  String get haveInviteCode => 'I have an invite code';
+
+  @override
+  String get inviteTitle => 'Activate your program';
+
+  @override
+  String get inviteSubtitle => 'Enter the code your physiotherapist gave you and choose a password.';
+
+  @override
+  String get inviteCodeLabel => 'Invite code';
+
+  @override
+  String get confirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get createAccountButton => 'Activate';
+
+  @override
+  String get backToSignIn => 'Back to sign in';
+
+  @override
+  String get passwordsDontMatch => 'Passwords don\'t match.';
+
+  @override
+  String get fieldRequired => 'Required';
+
+  @override
+  String get signOutLabel => 'Sign out';
+
+  @override
+  String get deleteAccountLabel => 'Delete account';
+
+  @override
+  String get deleteAccountTitle => 'Delete account?';
+
+  @override
+  String get deleteAccountBody => 'This permanently removes your access. Enter your password to confirm.';
+
+  @override
+  String get deleteAccountConfirm => 'Delete';
+
+  @override
+  String get resolvingIdentity => 'Signing you in…';
+
+  @override
+  String get notLinkedTitle => 'Almost there';
+
+  @override
+  String get notLinkedBody => 'Your account isn\'t linked to a program yet. Enter your invite code to finish.';
+
+  @override
+  String get retryButton => 'Try again';
+
+  @override
+  String get errInvalidCredentials => 'Wrong email or password.';
+
+  @override
+  String get errEmailInUseWrongPassword => 'This email already has an account, but the password doesn\'t match it.';
+
+  @override
+  String get errInvalidInvite => 'That invite code isn\'t valid. Check it with your physiotherapist.';
+
+  @override
+  String get errWeakPassword => 'Password is too weak — use at least 6 characters.';
+
+  @override
+  String get errInvalidEmail => 'That doesn\'t look like an email address.';
+
+  @override
+  String get errNetwork => 'No connection. Check your internet and try again.';
+
+  @override
+  String get errRequiresRecentLogin => 'Please sign in again, then retry.';
+
+  @override
+  String get errUnknown => 'Something went wrong. Try again.';
 }

@@ -976,6 +976,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exit fullscreen'**
   String get exitFullscreenTooltip;
+
+  /// No description provided for @signInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInTitle;
+
+  /// No description provided for @signInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your exercise program, at home'**
+  String get signInSubtitle;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// No description provided for @signInButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInButton;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @resetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for that email, a reset link is on its way.'**
+  String get resetEmailSent;
+
+  /// No description provided for @resetEmailEnterFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email above first.'**
+  String get resetEmailEnterFirst;
+
+  /// No description provided for @haveInviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'I have an invite code'**
+  String get haveInviteCode;
+
+  /// No description provided for @inviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate your program'**
+  String get inviteTitle;
+
+  /// No description provided for @inviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code your physiotherapist gave you and choose a password.'**
+  String get inviteSubtitle;
+
+  /// No description provided for @inviteCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get inviteCodeLabel;
+
+  /// No description provided for @confirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPasswordLabel;
+
+  /// No description provided for @createAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get createAccountButton;
+
+  /// No description provided for @backToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get backToSignIn;
+
+  /// No description provided for @passwordsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords don\'t match.'**
+  String get passwordsDontMatch;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get fieldRequired;
+
+  /// No description provided for @signOutLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOutLabel;
+
+  /// No description provided for @deleteAccountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountLabel;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently removes your access. Enter your password to confirm.'**
+  String get deleteAccountBody;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @resolvingIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing you in…'**
+  String get resolvingIdentity;
+
+  /// No description provided for @notLinkedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there'**
+  String get notLinkedTitle;
+
+  /// No description provided for @notLinkedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account isn\'t linked to a program yet. Enter your invite code to finish.'**
+  String get notLinkedBody;
+
+  /// No description provided for @retryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retryButton;
+
+  /// No description provided for @errInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email or password.'**
+  String get errInvalidCredentials;
+
+  /// No description provided for @errEmailInUseWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'This email already has an account, but the password doesn\'t match it.'**
+  String get errEmailInUseWrongPassword;
+
+  /// No description provided for @errInvalidInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'That invite code isn\'t valid. Check it with your physiotherapist.'**
+  String get errInvalidInvite;
+
+  /// No description provided for @errWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak — use at least 6 characters.'**
+  String get errWeakPassword;
+
+  /// No description provided for @errInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'That doesn\'t look like an email address.'**
+  String get errInvalidEmail;
+
+  /// No description provided for @errNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Check your internet and try again.'**
+  String get errNetwork;
+
+  /// No description provided for @errRequiresRecentLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in again, then retry.'**
+  String get errRequiresRecentLogin;
+
+  /// No description provided for @errUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get errUnknown;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
