@@ -117,6 +117,69 @@ class SecondaryButton extends StatelessWidget {
   }
 }
 
+/// Password input with an eye toggle to reveal what was typed. Obscured by
+/// default; the state is per-field, so revealing one password on a form
+/// leaves its siblings hidden.
+class PasswordField extends StatefulWidget {
+  final TextEditingController controller;
+  final String label;
+
+  /// Tooltip/semantics for the toggle in each state — passed in because the
+  /// design system has no l10n access.
+  final String showLabel;
+  final String hideLabel;
+  final TextInputAction textInputAction;
+  final ValueChanged<String>? onSubmitted;
+  final Iterable<String>? autofillHints;
+  final bool autofocus;
+  final String? errorText;
+
+  const PasswordField({
+    super.key,
+    required this.controller,
+    required this.label,
+    required this.showLabel,
+    required this.hideLabel,
+    this.textInputAction = TextInputAction.done,
+    this.onSubmitted,
+    this.autofillHints,
+    this.autofocus = false,
+    this.errorText,
+  });
+
+  @override
+  State<PasswordField> createState() => _PasswordFieldState();
+}
+
+class _PasswordFieldState extends State<PasswordField> {
+  var _obscured = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: widget.controller,
+      obscureText: _obscured,
+      autofocus: widget.autofocus,
+      autofillHints: widget.autofillHints,
+      textInputAction: widget.textInputAction,
+      onSubmitted: widget.onSubmitted,
+      decoration: InputDecoration(
+        labelText: widget.label,
+        errorText: widget.errorText,
+        suffixIcon: IconButton(
+          tooltip: _obscured ? widget.showLabel : widget.hideLabel,
+          icon: Icon(
+            _obscured
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+          ),
+          onPressed: () => setState(() => _obscured = !_obscured),
+        ),
+      ),
+    );
+  }
+}
+
 /// Sets / reps / hold pill. [overridden] renders outlined in accent —
 /// "bespoke for this patient" (spec §6.3).
 class DosagePill extends StatelessWidget {

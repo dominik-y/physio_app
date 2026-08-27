@@ -81,14 +81,13 @@ Future<void> _confirmDelete(BuildContext context, AppSession session) async {
           children: [
             Text(l.deleteAccountBody),
             const SizedBox(height: 12),
-            TextField(
+            PasswordField(
               controller: controller,
-              obscureText: true,
+              label: l.passwordLabel,
+              showLabel: l.showPassword,
+              hideLabel: l.hidePassword,
               autofocus: true,
-              decoration: InputDecoration(
-                labelText: l.passwordLabel,
-                errorText: error,
-              ),
+              errorText: error,
             ),
           ],
         ),

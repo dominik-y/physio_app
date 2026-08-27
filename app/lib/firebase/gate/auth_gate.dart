@@ -60,7 +60,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   var _busy = false;
+
+  /// Separate from [_busy]: it must disable every command on the screen
+  /// (a second tap would send a second reset email) without lighting the
+  /// sign-in button's spinner.
+  var _resetBusy = false;
   String? _error;
+
+  bool get _locked => _busy || _resetBusy;
 
   @override
   void dispose() {
@@ -100,9 +107,18 @@ class _LoginScreenState extends State<LoginScreen> {
       messenger.showSnackBar(SnackBar(content: Text(l.resetEmailEnterFirst)));
       return;
     }
+    // Without this check a typo'd address gets the generic "link sent"
+    // message — the backend's user-not-found is deliberately swallowed
+    // (anti-enumeration), so shape errors must be caught before the call.
+    if (!looksLikeEmail(_email.text)) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errInvalidEmail)));
+      return;
+    }
+    setState(() => _resetBusy = true);
     final failure =
         await context.read<AuthCubit>().sendPasswordReset(_email.text);
     if (!mounted) return;
+    setState(() => _resetBusy = false);
     messenger.showSnackBar(SnackBar(
         content: Text(failure == null
             ? l.resetEmailSent
@@ -128,27 +144,27 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: InputDecoration(labelText: l.emailLabel),
         ),
         const SizedBox(height: AppSpacing.md),
-        TextField(
+        PasswordField(
           controller: _password,
-          obscureText: true,
+          label: l.passwordLabel,
+          showLabel: l.showPassword,
+          hideLabel: l.hidePassword,
           autofillHints: const [AutofillHints.password],
-          textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _busy ? null : _submit(),
-          decoration: InputDecoration(labelText: l.passwordLabel),
+          onSubmitted: (_) => _locked ? null : _submit(),
         ),
         _StatusSlot(error: _error),
         PrimaryButton(
             label: l.signInButton,
             busy: _busy,
-            onPressed: _busy ? null : _submit),
+            onPressed: _locked ? null : _submit),
         TextButton(
-            onPressed: _busy ? null : _forgotPassword,
+            onPressed: _locked ? null : _forgotPassword,
             child: Text(l.forgotPassword)),
         const SizedBox(height: AppSpacing.md),
         SecondaryButton(
             label: l.haveInviteCode,
             expanded: true,
-            onPressed: _busy ? null : widget.onInvite),
+            onPressed: _locked ? null : widget.onInvite),
       ],
     );
   }
@@ -202,6 +218,12 @@ class _InviteScreenState extends State<InviteScreen> {
       setState(() => _error = l.passwordsDontMatch);
       return;
     }
+    // Mirrors Firebase's own 6-char minimum: catching it here saves an
+    // account-creation attempt that the server would reject anyway.
+    if (!widget.forCurrentUser && _password.text.length < 6) {
+      setState(() => _error = l.errWeakPassword);
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -247,20 +269,21 @@ class _InviteScreenState extends State<InviteScreen> {
             decoration: InputDecoration(labelText: l.emailLabel),
           ),
           const SizedBox(height: AppSpacing.md),
-          TextField(
+          PasswordField(
             controller: _password,
-            obscureText: true,
+            label: l.passwordLabel,
+            showLabel: l.showPassword,
+            hideLabel: l.hidePassword,
             autofillHints: const [AutofillHints.newPassword],
             textInputAction: TextInputAction.next,
-            decoration: InputDecoration(labelText: l.passwordLabel),
           ),
           const SizedBox(height: AppSpacing.md),
-          TextField(
+          PasswordField(
             controller: _confirm,
-            obscureText: true,
-            textInputAction: TextInputAction.done,
+            label: l.confirmPasswordLabel,
+            showLabel: l.showPassword,
+            hideLabel: l.hidePassword,
             onSubmitted: (_) => _busy ? null : _submit(),
-            decoration: InputDecoration(labelText: l.confirmPasswordLabel),
           ),
         ],
         _StatusSlot(error: _error),

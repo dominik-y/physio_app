@@ -550,6 +550,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordLabel => 'Password';
 
   @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
   String get signInButton => 'Sign in';
 
   @override
@@ -586,7 +592,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordsDontMatch => 'Passwords don\'t match.';
 
   @override
-  String get fieldRequired => 'Required';
+  String get fieldRequired => 'Fill in all fields.';
 
   @override
   String get signOutLabel => 'Sign out';

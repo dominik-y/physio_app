@@ -87,7 +87,7 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextField, 'E-mail'), 'tomislav@tendo.hr');
     await tester.enterText(
-        find.widgetWithText(TextField, 'Lozinka'), 'tendo-dev-1');
+        find.widgetWithText(TextField, 'Lozinka'), 'tendo1');
     await tester.tap(find.text('Prijavi se'));
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.byType(CircularProgressIndicator), findsOneWidget,
@@ -104,7 +104,83 @@ void main() {
     await settle(tester);
     await tester.tap(find.text('Prijavi se'));
     await settle(tester);
-    expect(find.text('Obavezno'), findsOneWidget);
+    expect(find.text('Ispunite sva polja.'), findsOneWidget);
+  });
+
+  testWidgets('forgot password: malformed email never reaches the backend',
+      (tester) async {
+    // Regression: the backend swallows user-not-found (anti-enumeration),
+    // so without a client-side shape check a typo'd address showed the
+    // "link sent" snackbar.
+    final service = FakeAuthService();
+    await pumpGate(tester, service);
+    service.emitUid(null);
+    await settle(tester);
+    await tester.enterText(find.widgetWithText(TextField, 'E-mail'), 'abc');
+    await tester.tap(find.text('Zaboravljena lozinka?'));
+    await settle(tester);
+    expect(find.text('To ne izgleda kao e-adresa.'), findsOneWidget);
+    expect(service.resetCalls, 0);
+  });
+
+  testWidgets('forgot password: double tap sends exactly one reset email',
+      (tester) async {
+    final service = FakeAuthService()
+      ..resetDelay = const Duration(milliseconds: 200);
+    await pumpGate(tester, service);
+    service.emitUid(null);
+    await settle(tester);
+    await tester.enterText(
+        find.widgetWithText(TextField, 'E-mail'), 'tomislav@tendo.hr');
+    await tester.tap(find.text('Zaboravljena lozinka?'));
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(find.text('Zaboravljena lozinka?'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await settle(tester);
+    expect(service.resetCalls, 1);
+    expect(
+        find.text('Ako račun s tom e-adresom postoji, poveznica za promjenu '
+            'lozinke je poslana.'),
+        findsOneWidget);
+  });
+
+  testWidgets('password eye toggle reveals and re-hides the input',
+      (tester) async {
+    final service = FakeAuthService();
+    await pumpGate(tester, service);
+    service.emitUid(null);
+    await settle(tester);
+    TextField pw() =>
+        tester.widget<TextField>(find.widgetWithText(TextField, 'Lozinka'));
+    expect(pw().obscureText, isTrue);
+    await tester.tap(find.byTooltip('Prikaži lozinku'));
+    await tester.pump();
+    expect(pw().obscureText, isFalse);
+    await tester.tap(find.byTooltip('Sakrij lozinku'));
+    await tester.pump();
+    expect(pw().obscureText, isTrue);
+  });
+
+  testWidgets('invite flow: short password stops locally, no account attempt',
+      (tester) async {
+    final service = FakeAuthService();
+    await pumpGate(tester, service);
+    service.emitUid(null);
+    await settle(tester);
+    await tester.tap(find.text('Imam pozivni kod'));
+    await settle(tester);
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Pozivni kod'), 'LK7-3FQ9');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'E-mail'), 'luka@example.com');
+    await tester.enterText(find.widgetWithText(TextField, 'Lozinka'), '12345');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Potvrdite lozinku'), '12345');
+    await tester.tap(find.text('Aktiviraj'));
+    await settle(tester);
+    expect(find.text('Lozinka je preslaba — upotrijebite barem 6 znakova.'),
+        findsOneWidget);
+    expect(service.redeemCalls, 0);
   });
 
   testWidgets('successful sign-in swaps in the real app', (tester) async {
@@ -115,7 +191,7 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextField, 'E-mail'), 'tomislav@tendo.hr');
     await tester.enterText(
-        find.widgetWithText(TextField, 'Lozinka'), 'tendo-dev-1');
+        find.widgetWithText(TextField, 'Lozinka'), 'tendo1');
     await tester.tap(find.text('Prijavi se'));
     await settle(tester);
     expect(find.byType(PhysioApp), findsOneWidget);

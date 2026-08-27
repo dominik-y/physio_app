@@ -40,6 +40,12 @@ class FakeAuthService implements AuthService {
 
   /// redeemInvite outcome (see method for the mid-flow stream behavior).
   AuthFailure? redeemResult;
+  int redeemCalls = 0;
+
+  /// sendPasswordReset always succeeds; the delay keeps a first call in
+  /// flight so tests can prove the double-tap guard.
+  Duration resetDelay = Duration.zero;
+  int resetCalls = 0;
 
   /// deleteAccount outcome: null = success (signs out via the stream).
   AuthFailure? deleteResult;
@@ -79,7 +85,10 @@ class FakeAuthService implements AuthService {
   }
 
   @override
-  Future<void> sendPasswordReset(String email) async {}
+  Future<void> sendPasswordReset(String email) async {
+    resetCalls++;
+    if (resetDelay != Duration.zero) await Future<void>.delayed(resetDelay);
+  }
 
   /// The account-creation step always fires the auth stream mid-flow (the
   /// race the cubit must suppress); then either success, or invalidInvite
@@ -89,6 +98,7 @@ class FakeAuthService implements AuthService {
       {required String code,
       required String email,
       required String password}) async {
+    redeemCalls++;
     emitUid('uid-new');
     await Future<void>.delayed(Duration.zero);
     if (redeemResult != null) {

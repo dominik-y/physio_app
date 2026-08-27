@@ -577,6 +577,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get passwordLabel => 'Lozinka';
 
   @override
+  String get showPassword => 'Prikaži lozinku';
+
+  @override
+  String get hidePassword => 'Sakrij lozinku';
+
+  @override
   String get signInButton => 'Prijavi se';
 
   @override
@@ -613,7 +619,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get passwordsDontMatch => 'Lozinke se ne podudaraju.';
 
   @override
-  String get fieldRequired => 'Obavezno';
+  String get fieldRequired => 'Ispunite sva polja.';
 
   @override
   String get signOutLabel => 'Odjava';

@@ -1013,6 +1013,18 @@ abstract class AppLocalizations {
   /// **'Password'**
   String get passwordLabel;
 
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
   /// No description provided for @signInButton.
   ///
   /// In en, this message translates to:
@@ -1088,7 +1100,7 @@ abstract class AppLocalizations {
   /// No description provided for @fieldRequired.
   ///
   /// In en, this message translates to:
-  /// **'Required'**
+  /// **'Fill in all fields.'**
   String get fieldRequired;
 
   /// No description provided for @signOutLabel.
