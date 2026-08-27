@@ -250,6 +250,48 @@ void main() {
       await cubit.close();
     });
 
+    test('signIn against an unreachable backend times out to network',
+        () async {
+      final service = FakeAuthService()..signInHangs = true;
+      final cubit = AuthCubit(service, await freshCache(),
+          commandTimeout: const Duration(milliseconds: 30));
+      service.emitUid(null);
+      await pump();
+      final failure = await cubit.signIn('a@b.hr', 'pw');
+      expect(failure, AuthFailure.network,
+          reason: 'must answer in commandTimeout, not the OS socket timeout');
+      await cubit.close();
+    });
+
+    test('slow resolveIdentity on a fresh boot times out to the retry screen',
+        () async {
+      final service = FakeAuthService()
+        ..resolveResult = tomislav
+        ..resolveDelay = const Duration(milliseconds: 200);
+      final cubit = AuthCubit(service, await freshCache(),
+          commandTimeout: const Duration(milliseconds: 30));
+      service.emitUid('uid-physio');
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(cubit.state, const AuthResolveFailed(AuthFailure.network));
+      await cubit.close();
+    });
+
+    test('slow resolveIdentity never evicts a running cached session',
+        () async {
+      final service = FakeAuthService()
+        ..resolveResult = ana
+        ..resolveDelay = const Duration(milliseconds: 200);
+      final cache = await freshCache();
+      await cache.write(ana);
+      final cubit = AuthCubit(service, cache,
+          commandTimeout: const Duration(milliseconds: 30));
+      service.emitUid('uid-ana');
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(cubit.state, const AuthReady(ana),
+          reason: 'timeout == offline: the cache keeps the app running');
+      await cubit.close();
+    });
+
     test('signOut clears the cache and lands signedOut', () async {
       final service = FakeAuthService()..resolveResult = ana;
       final cache = await freshCache();

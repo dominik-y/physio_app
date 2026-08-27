@@ -8,6 +8,12 @@ import 'package:physio_app/firebase/auth_failure_l10n.dart';
 import 'package:physio_app/firebase/auth_service.dart';
 import 'package:physio_app/l10n/gen/app_localizations.dart';
 
+/// Client-side shape check only — never asks the backend whether an
+/// account exists (Firebase deliberately returns the same error for wrong
+/// email and wrong password; anything else enables user enumeration).
+bool looksLikeEmail(String s) =>
+    RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s.trim());
+
 /// The signed-out gate: Prijava, with "Imam pozivni kod" as a local flip
 /// (no Navigator — the whole gate gets swapped out by the bootstrap the
 /// moment AuthCubit lands on AuthReady).
@@ -69,6 +75,10 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _error = l.fieldRequired);
       return;
     }
+    if (!looksLikeEmail(_email.text)) {
+      setState(() => _error = l.errInvalidEmail);
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -126,12 +136,11 @@ class _LoginScreenState extends State<LoginScreen> {
           onSubmitted: (_) => _busy ? null : _submit(),
           decoration: InputDecoration(labelText: l.passwordLabel),
         ),
-        if (_error != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          _ErrorText(_error!),
-        ],
-        const SizedBox(height: AppSpacing.lg),
-        PrimaryButton(label: l.signInButton, onPressed: _busy ? null : _submit),
+        _StatusSlot(error: _error),
+        PrimaryButton(
+            label: l.signInButton,
+            busy: _busy,
+            onPressed: _busy ? null : _submit),
         TextButton(
             onPressed: _busy ? null : _forgotPassword,
             child: Text(l.forgotPassword)),
@@ -183,6 +192,10 @@ class _InviteScreenState extends State<InviteScreen> {
         (!widget.forCurrentUser &&
             (_email.text.trim().isEmpty || _password.text.isEmpty))) {
       setState(() => _error = l.fieldRequired);
+      return;
+    }
+    if (!widget.forCurrentUser && !looksLikeEmail(_email.text)) {
+      setState(() => _error = l.errInvalidEmail);
       return;
     }
     if (!widget.forCurrentUser && _password.text != _confirm.text) {
@@ -250,13 +263,11 @@ class _InviteScreenState extends State<InviteScreen> {
             decoration: InputDecoration(labelText: l.confirmPasswordLabel),
           ),
         ],
-        if (_error != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          _ErrorText(_error!),
-        ],
-        const SizedBox(height: AppSpacing.lg),
+        _StatusSlot(error: _error),
         PrimaryButton(
-            label: l.createAccountButton, onPressed: _busy ? null : _submit),
+            label: l.createAccountButton,
+            busy: _busy,
+            onPressed: _busy ? null : _submit),
         const SizedBox(height: AppSpacing.sm),
         if (widget.forCurrentUser)
           TextButton(
@@ -351,20 +362,32 @@ class GateScaffold extends StatelessWidget {
   }
 }
 
-class _ErrorText extends StatelessWidget {
-  final String text;
+/// Always-present error slot between the fields and the submit button.
+/// Reserving the height keeps the centered column from jumping when an
+/// error appears, is cleared on retry, or comes back (observed on-device
+/// as a ~10 px flicker of the whole gate).
+class _StatusSlot extends StatelessWidget {
+  final String? error;
 
-  const _ErrorText(this.text);
+  const _StatusSlot({required this.error});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-          color: Theme.of(context).colorScheme.error,
-          fontSize: 14,
-          fontWeight: FontWeight.w500),
+    final text = error;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 44),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: text == null
+          ? const SizedBox.shrink()
+          : Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500),
+            ),
     );
   }
 }

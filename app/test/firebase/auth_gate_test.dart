@@ -61,6 +61,41 @@ void main() {
     expect(find.byType(PhysioApp), findsNothing);
   });
 
+  testWidgets('malformed email is rejected client-side, no backend call',
+      (tester) async {
+    final service = FakeAuthService();
+    await pumpGate(tester, service);
+    service.emitUid(null);
+    await settle(tester);
+    await tester.enterText(
+        find.widgetWithText(TextField, 'E-mail'), 'not-an-address');
+    await tester.enterText(find.widgetWithText(TextField, 'Lozinka'), 'pw123');
+    await tester.tap(find.text('Prijavi se'));
+    await settle(tester);
+    expect(find.text('To ne izgleda kao e-adresa.'), findsOneWidget);
+    expect(service.signInCalls, 0);
+  });
+
+  testWidgets('sign-in shows a spinner in the button while in flight',
+      (tester) async {
+    final service = FakeAuthService()
+      ..resolveResult = tomislav
+      ..signInDelay = const Duration(milliseconds: 150);
+    await pumpGate(tester, service);
+    service.emitUid(null);
+    await settle(tester);
+    await tester.enterText(
+        find.widgetWithText(TextField, 'E-mail'), 'tomislav@tendo.hr');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Lozinka'), 'tendo-dev-1');
+    await tester.tap(find.text('Prijavi se'));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(CircularProgressIndicator), findsOneWidget,
+        reason: 'a silent disabled button reads as frozen');
+    await settle(tester);
+    expect(find.byType(PhysioApp), findsOneWidget);
+  });
+
   testWidgets('empty fields are rejected before touching the network',
       (tester) async {
     final service = FakeAuthService();

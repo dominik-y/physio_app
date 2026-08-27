@@ -32,6 +32,11 @@ class FakeAuthService implements AuthService {
   /// signIn outcome: null = success (fires the stream with [signInUid]).
   AuthFailure? signInResult;
   String signInUid = 'uid-physio';
+  Duration signInDelay = Duration.zero;
+
+  /// Unreachable-backend mode: signIn never completes (cubit timeout test).
+  bool signInHangs = false;
+  int signInCalls = 0;
 
   /// redeemInvite outcome (see method for the mid-flow stream behavior).
   AuthFailure? redeemResult;
@@ -66,6 +71,9 @@ class FakeAuthService implements AuthService {
 
   @override
   Future<void> signIn(String email, String password) async {
+    signInCalls++;
+    if (signInHangs) return Completer<void>().future;
+    if (signInDelay != Duration.zero) await Future<void>.delayed(signInDelay);
     if (signInResult != null) throw AuthException(signInResult!);
     emitUid(signInUid);
   }

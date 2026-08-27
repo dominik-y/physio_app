@@ -55,12 +55,20 @@ class AuthCubit extends Cubit<AuthState> {
   final IdentityCache _cache;
   late final StreamSubscription<String?> _sub;
 
+  /// Deadline for single-step auth commands — an unreachable backend must
+  /// answer in seconds, not the OS socket timeout (observed ~30 s on
+  /// device). Redemption is multi-step and gets double. Injectable so tests
+  /// don't wait wall-clock time.
+  final Duration commandTimeout;
+
   /// Redemption is multi-step (create user → link batch): the auth stream
   /// fires after step 1 and identity resolution at that instant would flash
   /// AuthResolveFailed(notLinked). Suppressed until the flow settles.
   bool _suppressStream = false;
 
-  AuthCubit(this._service, this._cache) : super(const AuthUnknown()) {
+  AuthCubit(this._service, this._cache,
+      {this.commandTimeout = const Duration(seconds: 15)})
+      : super(const AuthUnknown()) {
     _sub = _service.uidChanges().listen(_onUid);
   }
 
@@ -92,7 +100,8 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> _refresh(String uid) async {
     try {
-      final identity = await _service.resolveIdentity();
+      final identity =
+          await _service.resolveIdentity().timeout(commandTimeout * 2);
       if (_stale(uid) || identity.uid != uid) return;
       await _cache.write(identity);
       if (_stale(uid)) return;
@@ -105,6 +114,11 @@ class AuthCubit extends Cubit<AuthState> {
       // unless the backend positively says this account has no link.
       if (state is AuthReady && e.failure != AuthFailure.notLinked) return;
       emit(AuthResolveFailed(e.failure));
+    } on TimeoutException {
+      // Unreachable backend == offline for our purposes: keep a cached
+      // session running, land a fresh boot on the retry screen.
+      if (_stale(uid) || state is AuthReady) return;
+      emit(const AuthResolveFailed(AuthFailure.network));
     } catch (_) {
       // A malformed doc must land on the retry screen, not freeze the
       // splash forever with an uncaught async error.
@@ -126,19 +140,23 @@ class AuthCubit extends Cubit<AuthState> {
   /// stream for plain sign-in.
   Future<AuthFailure?> signIn(String email, String password) async {
     try {
-      await _service.signIn(email, password);
+      await _service.signIn(email, password).timeout(commandTimeout);
       return null;
     } on AuthException catch (e) {
       return e.failure;
+    } on TimeoutException {
+      return AuthFailure.network;
     }
   }
 
   Future<AuthFailure?> sendPasswordReset(String email) async {
     try {
-      await _service.sendPasswordReset(email);
+      await _service.sendPasswordReset(email).timeout(commandTimeout);
       return null;
     } on AuthException catch (e) {
       return e.failure;
+    } on TimeoutException {
+      return AuthFailure.network;
     }
   }
 
@@ -150,7 +168,9 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     _suppressStream = true;
     try {
-      await _service.redeemInvite(code: code, email: email, password: password);
+      await _service
+          .redeemInvite(code: code, email: email, password: password)
+          .timeout(commandTimeout * 2);
       final uid = _service.currentUid;
       if (uid == null) return AuthFailure.unknown;
       emit(const AuthResolving());
@@ -158,6 +178,10 @@ class AuthCubit extends Cubit<AuthState> {
       return null;
     } on AuthException catch (e) {
       return e.failure;
+    } on TimeoutException {
+      // The in-flight work may still land later — _resyncWithAuth below
+      // replays whatever auth state it produced.
+      return AuthFailure.network;
     } finally {
       _suppressStream = false;
       _resyncWithAuth();
@@ -183,7 +207,7 @@ class AuthCubit extends Cubit<AuthState> {
   /// Redemption for the notLinked recovery screen (already signed in).
   Future<AuthFailure?> redeemForCurrentUser(String code) async {
     try {
-      await _service.redeemInviteForCurrentUser(code);
+      await _service.redeemInviteForCurrentUser(code).timeout(commandTimeout);
       final uid = _service.currentUid;
       if (uid == null) return AuthFailure.unknown;
       emit(const AuthResolving());
@@ -191,6 +215,8 @@ class AuthCubit extends Cubit<AuthState> {
       return null;
     } on AuthException catch (e) {
       return e.failure;
+    } on TimeoutException {
+      return AuthFailure.network;
     }
   }
 

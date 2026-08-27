@@ -47,6 +47,10 @@ class PrimaryButton extends StatelessWidget {
   final Color background;
   final Color foreground;
 
+  /// In-flight affordance: a spinner replaces the label (same footprint, no
+  /// layout shift) while the tap's work runs. Pass with onPressed == null.
+  final bool busy;
+
   const PrimaryButton({
     super.key,
     required this.label,
@@ -56,6 +60,7 @@ class PrimaryButton extends StatelessWidget {
     // Colors.md rule 4 reserves brand blue for fills without text.
     this.background = AppColors.accentDeep,
     this.foreground = AppColors.onAccent,
+    this.busy = false,
   });
 
   @override
@@ -71,7 +76,15 @@ class PrimaryButton extends StatelessWidget {
         shape: const StadiumBorder(),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
-      child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      child: busy
+          ? SizedBox(
+              // Match the label's line height so the pill keeps its size.
+              height: 19,
+              width: 19,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2.4, color: foreground.withOpacity(0.9)),
+            )
+          : Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
     return expanded ? SizedBox(width: double.infinity, child: button) : button;
   }
